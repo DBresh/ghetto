@@ -7,6 +7,18 @@ class Game {
         this.bullets = []; // New array to track active bullets
         this.bulletIdCounter = 0;
         this.lastUpdateTime = Date.now();
+
+        this.relic = { x: 0, y: 0 };
+        this.spawnRelic();
+        this.gameStartTime = Date.now();
+        this.timeLeft = CONSTANTS.MATCH_LENGTH; // 180 seconds
+        this.isGameOver = false;
+    }
+
+    spawnRelic() {
+        this.relic.x = Math.random() * (CONSTANTS.WORLD_WIDTH - 30); // css
+        this.relic.y = Math.random() * (CONSTANTS.WORLD_HEIGHT - 30); // css
+        console.log();
     }
 
     addPlayer(id) {
@@ -38,25 +50,29 @@ class Game {
     handleInput(id, inputs) {
         if (this.players[id]) {
             this.players[id].inputs = inputs;
-            // Add this temporary log:
-            if (inputs.shooting) {
-                console.log(
-                    `[SERVER RECEIVE] Player ${id} is trying to shoot! Mouse: ${inputs.mouseX}, ${inputs.mouseY}`,
-                );
-            }
         }
     }
 
     // The core physics loop - runs 60 times a second
     update() {
+        // Stop calculating physics if the game is over
+        if (this.isGameOver) return this.getState();
+
         const now = Date.now();
         const dt = (now - this.lastUpdateTime) / 1000;
         this.lastUpdateTime = now;
 
+        // --- NEW TIMER LOGIC ---
+        const elapsedSeconds = Math.floor((now - this.gameStartTime) / 1000);
+        this.timeLeft = Math.max(0, CONSTANTS.MATCH_LENGTH - elapsedSeconds);
+        if (this.timeLeft === 0) {
+            this.isGameOver = true;
+        }
+
         // 1. UPDATE PLAYERS
         for (const id in this.players) {
             const p = this.players[id];
-            if (p.isStunned) continue; // Stunned players can't move or shoot
+            if (p.isStunned) continue;
 
             const distance = CONSTANTS.PLAYER_SPEED * dt;
             if (p.inputs.up) p.y -= distance;
@@ -72,6 +88,18 @@ class Game {
                 0,
                 Math.min(p.y, CONSTANTS.WORLD_HEIGHT - CONSTANTS.PLAYER_SIZE),
             );
+
+            // --- NEW RELIC COLLISION LOGIC ---
+            // AABB Collision between Player (size from constants) and Relic (30px)
+            if (
+                p.x < this.relic.x + 30 &&
+                p.x + CONSTANTS.PLAYER_SIZE > this.relic.x &&
+                p.y < this.relic.y + 30 &&
+                p.y + CONSTANTS.PLAYER_SIZE > this.relic.y
+            ) {
+                p.score += 5; // 5 points for grabbing the relic!
+                this.spawnRelic(); // Instantly move it somewhere else
+            }
 
             // SHOOTING LOGIC
             if (
@@ -98,9 +126,6 @@ class Game {
                     velocityX: Math.cos(angle) * CONSTANTS.BULLET_SPEED,
                     velocityY: Math.sin(angle) * CONSTANTS.BULLET_SPEED,
                 });
-                console.log(
-                    `[SERVER PHYSICS] Bullet Spawned! Total bullets active: ${this.bullets.length}`,
-                );
             }
         }
 
@@ -174,9 +199,13 @@ class Game {
 
     // Package the world state for broadcasting
     getState() {
+        console.log(this.relic);
         return {
             players: this.players,
-            // We will add bullets and the relic here later
+            bullets: this.bullets,
+            relic: this.relic,
+            timeLeft: this.timeLeft,
+            isGameOver: this.isGameOver,
         };
     }
 }

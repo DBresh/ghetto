@@ -31,10 +31,3 @@ window.addEventListener("mousemove", (e) => {
 
 window.addEventListener("mousedown", () => (keys.shooting = true));
 window.addEventListener("mouseup", () => (keys.shooting = false));
-
-window.addEventListener("mousedown", () => {
-    keys.shooting = true;
-    console.log(
-        `[CLIENT INPUT] Mouse Down at X: ${keys.mouseX}, Y: ${keys.mouseY}`,
-    );
-});

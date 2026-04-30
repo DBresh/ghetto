@@ -1,5 +1,17 @@
 const socket = io();
 const arena = document.getElementById("game-arena");
+const timerEl = document.getElementById("timer");
+const scoreboardEl = document.getElementById("scoreboard");
+
+const relicElement = document.createElement("div");
+relicElement.classList.add("entity", "relic");
+arena.appendChild(relicElement);
+
+function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+}
 
 let serverState = { players: {} };
 const playerElements = {}; // This stores our actual DOM elements
@@ -17,18 +29,6 @@ for (let i = 0; i < MAX_BULLETS; i++) {
 // 1. Listen for the absolute truth from the server
 socket.on("state_update", (state) => {
     serverState = state;
-
-    // Add this debug block:
-    if (state.bullets && state.bullets.length > 0) {
-        // We only log if a global flag isn't set, to prevent flooding the console
-        if (!window.hasLoggedBullet) {
-            console.log(
-                `[CLIENT RENDER] Received bullets from server! First bullet at X: ${state.bullets[0].x}`,
-            );
-            window.hasLoggedBullet = true;
-            setTimeout(() => (window.hasLoggedBullet = false), 1000); // Allow one log per second
-        }
-    }
 });
 
 // Clean up DOM elements if someone quits
@@ -46,6 +46,33 @@ setInterval(() => {
 
 // 3. The Render Loop (Tied to the monitor's refresh rate)
 function render() {
+    if (serverState.relic) {
+        // Because of the CSS animation we added, it will pulse automatically!
+        relicElement.style.transform = `translate3d(${serverState.relic.x}px, ${serverState.relic.y}px, 0)`;
+        console.log(serverState.relic.x, serverState.relic.y);
+    }
+
+    // --- NEW UI RENDER (Timer & Scoreboard) ---
+    if (serverState.timeLeft !== undefined) {
+        timerEl.innerText = serverState.isGameOver
+            ? "GAME OVER"
+            : formatTime(serverState.timeLeft);
+    }
+
+    // Build the scoreboard dynamically
+    let scoreHTML = "<strong>Scores:</strong><br>";
+    // Sort players by score (highest first)
+    const sortedPlayers = Object.values(serverState.players || {}).sort(
+        (a, b) => b.score - a.score,
+    );
+
+    sortedPlayers.forEach((p, index) => {
+        // Highlight the current player's name
+        const isMe = p.id === socket.id ? " (You)" : "";
+        scoreHTML += `<span style="color: ${p.color}">Player ${index + 1}${isMe}: ${p.score}</span><br>`;
+    });
+    scoreboardEl.innerHTML = scoreHTML;
+
     for (const id in serverState.players) {
         const p = serverState.players[id];
 
