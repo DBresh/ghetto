@@ -1,0 +1,52 @@
+body,
+html {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #1a1a1a;
+    overflow: hidden; /* No scrolling allowed */
+    font-family: monospace;
+    color: white;
+}
+
+#game-arena {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    /* We will scale this dynamically via JS later to maintain aspect ratio */
+}
+
+/* Base class for ALL moving objects */
+.entity {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* This will be updated by JS: transform: translate3d(x, y, 0); */
+    will-change: transform; /* Hint to the browser for GPU acceleration */
+}
+
+.player {
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    pointer-events: none; /* Let clicks pass through to the game */
+    display: flex;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.bullet {
+    width: 10px;
+    height: 10px;
+    background-color: yellow;
+    border-radius: 50%;
+    box-shadow: 0 0 5px yellow;
+}
