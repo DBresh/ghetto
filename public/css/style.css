@@ -4,17 +4,21 @@ html {
     padding: 0;
     width: 100vw;
     height: 100vh;
-    background-color: #1a1a1a;
-    overflow: hidden; /* No scrolling allowed */
+    background-color: #050505;
+    overflow: hidden;
     font-family: monospace;
     color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #game-arena {
     position: relative;
-    width: 100vw;
-    height: 100vh;
-    /* We will scale this dynamically via JS later to maintain aspect ratio */
+    width: 1000px;
+    height: 1000px;
+    background-color: #1a1a1a;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
 /* Base class for ALL moving objects */
@@ -52,11 +56,8 @@ html {
 }
 
 .relic {
-    width: 30px;
-    height: 30px;
     background-color: #00ffcc;
     border-radius: 4px;
-    box-shadow: 0 0 15px #00ffcc;
     animation: pulse 1s infinite alternate;
 }
 
@@ -69,4 +70,52 @@ html {
         transform: scale(1.1);
         box-shadow: 0 0 20px #00ffcc;
     }
+}
+
+#menu-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.menu-box {
+    background: #222;
+    padding: 40px;
+    border: 2px solid #555;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.menu-box button {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 15px;
+    font-size: 16px;
+    cursor: pointer;
+    background: #444;
+    color: white;
+    border: none;
+    font-family: monospace;
+}
+
+.menu-box button:hover {
+    background: #00ffcc;
+    color: black;
+}
+
+#event-log {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    color: #ffaa00;
+    font-size: 14px;
+    pointer-events: none;
 }

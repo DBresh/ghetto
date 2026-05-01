@@ -2,10 +2,21 @@ const socket = io();
 const arena = document.getElementById("game-arena");
 const timerEl = document.getElementById("timer");
 const scoreboardEl = document.getElementById("scoreboard");
+const menuOverlay = document.getElementById("menu-overlay");
+const eventLog = document.getElementById("event-log");
 
-const relicElement = document.createElement("div");
-relicElement.classList.add("entity", "relic");
-arena.appendChild(relicElement);
+const relicWrapper = document.createElement("div");
+relicWrapper.classList.add("entity");
+relicWrapper.style.width = "30px";
+relicWrapper.style.height = "30px";
+
+const relicVisual = document.createElement("div");
+relicVisual.classList.add("relic");
+relicVisual.style.width = "100%";
+relicVisual.style.height = "100%";
+
+relicWrapper.appendChild(relicVisual);
+arena.appendChild(relicWrapper);
 
 function formatTime(seconds) {
     const m = Math.floor(seconds / 60);
@@ -39,17 +50,68 @@ socket.on("player_left", (id) => {
     }
 });
 
-// 2. Send our input state to the server (independent of rendering)
+window.addEventListener("keydown", (e) => {
+    if (e.code === "Escape") {
+        if (isMenuOpen) {
+            socket.emit("action_resume");
+        } else {
+            socket.emit("action_pause");
+        }
+    }
+});
+
+document.getElementById("btn-resume").addEventListener("click", () => {
+    socket.emit("action_resume");
+});
+
+document.getElementById("btn-quit").addEventListener("click", () => {
+    socket.emit("action_quit");
+    document.body.innerHTML =
+        "<h1 style='text-align:center; margin-top:20vh;'>You left the game.</h1>";
+});
+
+let isMenuOpen = false;
+socket.on("pause_state_changed", (isPaused) => {
+    isMenuOpen = isPaused;
+    if (isPaused) {
+        menuOverlay.style.display = "flex";
+    } else {
+        menuOverlay.style.display = "none";
+    }
+});
+
+let logTimeout;
+socket.on("server_message", (msg) => {
+    eventLog.innerText = msg;
+    clearTimeout(logTimeout);
+    // Hide the message after 4 seconds
+    logTimeout = setTimeout(() => {
+        eventLog.innerText = "";
+    }, 4000);
+});
+
+function resizeArena() {
+    // Find how much we need to shrink/grow to fit the width and height
+    const scaleX = window.innerWidth / CONSTANTS.WORLD_WIDTH;
+    const scaleY = window.innerHeight / CONSTANTS.WORLD_HEIGHT;
+    // Pick the smaller scale to ensure the whole box fits on screen without stretching
+    const scale = Math.min(scaleX, scaleY) * 0.95; // 0.95 adds a tiny 5% margin
+
+    arena.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener("resize", resizeArena);
+resizeArena(); // Run it once immediately on load
+
+// Send our input state to the server (independent of rendering)
 setInterval(() => {
     socket.emit("player_input", keys);
 }, 1000 / CONSTANTS.TICK_RATE);
 
-// 3. The Render Loop (Tied to the monitor's refresh rate)
+// Render Loop (Tied to the monitor's refresh rate)
 function render() {
     if (serverState.relic) {
-        // Because of the CSS animation we added, it will pulse automatically!
-        relicElement.style.transform = `translate3d(${serverState.relic.x}px, ${serverState.relic.y}px, 0)`;
-        console.log(serverState.relic.x, serverState.relic.y);
+        relicWrapper.style.transform = `translate3d(${serverState.relic.x}px, ${serverState.relic.y}px, 0)`;
     }
 
     // --- NEW UI RENDER (Timer & Scoreboard) ---

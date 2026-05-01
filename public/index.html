@@ -20,6 +20,18 @@
         <div id="scoreboard">Waiting for players...</div>
     </div>
 
+    <!-- Event Log for announcements -->
+    <div id="event-log"></div>
+
+    <!-- The Pause Menu -->
+    <div id="menu-overlay" style="display: none;">
+        <div class="menu-box">
+            <h2>GAME PAUSED</h2>
+            <button id="btn-resume">Resume Game</button>
+            <button id="btn-quit">Quit Game</button>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="/shared/constants.js"></script>

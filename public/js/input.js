@@ -8,6 +8,8 @@ const keys = {
     mouseY: 0,
 };
 
+const arenaElement = document.getElementById("game-arena");
+
 // Keyboard tracking
 window.addEventListener("keydown", (e) => {
     if (e.code === "KeyW" || e.code === "ArrowUp") keys.up = true;
@@ -25,8 +27,11 @@ window.addEventListener("keyup", (e) => {
 
 // Mouse tracking
 window.addEventListener("mousemove", (e) => {
-    keys.mouseX = e.clientX;
-    keys.mouseY = e.clientY;
+    const rect = arenaElement.getBoundingClientRect();
+    const xRelativeToArena = e.clientX - rect.left;
+    const yRelativeToArena = e.clientY - rect.top;
+    keys.mouseX = xRelativeToArena * (CONSTANTS.WORLD_WIDTH / rect.width);
+    keys.mouseY = yRelativeToArena * (CONSTANTS.WORLD_HEIGHT / rect.height);
 });
 
 window.addEventListener("mousedown", () => (keys.shooting = true));

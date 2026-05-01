@@ -18,7 +18,6 @@ class Game {
     spawnRelic() {
         this.relic.x = Math.random() * (CONSTANTS.WORLD_WIDTH - 30); // css
         this.relic.y = Math.random() * (CONSTANTS.WORLD_HEIGHT - 30); // css
-        console.log();
     }
 
     addPlayer(id) {
@@ -61,6 +60,10 @@ class Game {
         const now = Date.now();
         const dt = (now - this.lastUpdateTime) / 1000;
         this.lastUpdateTime = now;
+
+        if (this.isPaused) {
+            return this.getState();
+        }
 
         // --- NEW TIMER LOGIC ---
         const elapsedSeconds = Math.floor((now - this.gameStartTime) / 1000);
@@ -199,7 +202,6 @@ class Game {
 
     // Package the world state for broadcasting
     getState() {
-        console.log(this.relic);
         return {
             players: this.players,
             bullets: this.bullets,

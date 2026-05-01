@@ -26,9 +26,37 @@ io.on("connection", (socket) => {
         game.handleInput(socket.id, inputs);
     });
 
+    socket.on("action_pause", () => {
+        game.isPaused = true;
+        io.emit(
+            "server_message",
+            `Player ${socket.id.substring(0, 4)} paused the game.`,
+        );
+        io.emit("pause_state_changed", true);
+    });
+
+    socket.on("action_resume", () => {
+        game.isPaused = false;
+        io.emit(
+            "server_message",
+            `Player ${socket.id.substring(0, 4)} resumed the game.`,
+        );
+        io.emit("pause_state_changed", false);
+    });
+
+    socket.on("action_quit", () => {
+        io.emit(
+            "server_message",
+            `Player ${socket.id.substring(0, 4)} rage quit!`,
+        );
+        game.removePlayer(socket.id);
+        socket.disconnect();
+    });
+
     socket.on("disconnect", () => {
         console.log(`Player disconnected: ${socket.id}`);
         game.removePlayer(socket.id);
+        io.emit("player_left", socket.id);
     });
 });
 
