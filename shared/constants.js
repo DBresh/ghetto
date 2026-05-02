@@ -21,7 +21,14 @@ const CONSTANTS = {
 
     MAX_HP: 100,
     BULLET_DAMAGE: 34,
-    RELIC_AMOUNT: 4,
+
+    POWERUP_SIZE: 30,
+    POWERUP_TYPES: ["RELIC", "SPEED", "DOUBLE_BARREL", "SHIELD"],
+    BUFF_DURATION: 6000, // 6 seconds for temporary buffs
+    HEAL_AMOUNT: 25,
+    SPEED_MULTIPLIER: 5,
+    SHIELD_CHARGES: 2,
+    MAX_POWERUPS: 8,
 };
 
 // Universal export for both Node.js and the Browser

@@ -1,7 +1,7 @@
 const socket = io();
 
 // 1. START THE GRAPHICS ENGINE
-initRenderer();
+RENDERER.start();
 
 // 2. FORCE ARENA SIZING
 const arenaEl = document.getElementById("game-arena");
@@ -22,9 +22,7 @@ socket.on("server_message", (msg) => {
 });
 
 socket.on("map_data", (data) => {
-    if (typeof buildObstacles === "function") {
-        buildObstacles(data.obstacles);
-    }
+    RENDERER.buildObstacles(data.obstacles);
 });
 
 socket.on("chat_message", (data) => {

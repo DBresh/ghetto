@@ -24,17 +24,34 @@ class Player {
         this.hp = CONSTANTS.MAX_HP;
         this.baseAngle = 0;
         this.turretAngle = 0;
+
+        // --- NEW: Buff States ---
+        this.shieldCharges = 0;
+        this.speedTimer = 0;
+        this.doubleBarrelTimer = 0;
+
+        // Client-friendly booleans
+        this.hasSpeed = false;
+        this.hasDoubleBarrel = false;
     }
 
-    update(dt, obstacles) {
+    update(dt, obstacles, now) {
         this.isFreshClick = this.inputs.shooting && !this.wasShooting;
         this.wasShooting = this.inputs.shooting;
+
+        this.hasSpeed = now < this.speedTimer;
+        this.hasDoubleBarrel = now < this.doubleBarrelTimer;
 
         // 1. Tank Chassis Rotation (A and D keys)
         if (this.inputs.left)
             this.baseAngle -= CONSTANTS.TANK_ROTATION_SPEED * dt;
         if (this.inputs.right)
             this.baseAngle += CONSTANTS.TANK_ROTATION_SPEED * dt;
+
+        // --- SPEED BOOST CALCULATION ---
+        let currentSpeed = CONSTANTS.PLAYER_SPEED;
+        if (this.hasSpeed) currentSpeed *= CONSTANTS.SPEED_MULTIPLIER;
+        const frameSpeed = currentSpeed * dt;
 
         const isColliding = () => {
             return obstacles.some(
@@ -91,8 +108,15 @@ class Player {
         );
     }
 
-    // Replace stun() with this:
+    heal(amount) {
+        this.hp = Math.min(this.hp + amount, CONSTANTS.MAX_HP);
+    }
+
     takeDamage(amount) {
+        if (this.shieldCharges > 0) {
+            this.shieldCharges--;
+            return;
+        }
         this.hp -= amount;
         if (this.hp <= 0) {
             return true; // Returns true if the tank was destroyed
@@ -104,6 +128,19 @@ class Player {
         this.hp = CONSTANTS.MAX_HP;
         this.x = safeX;
         this.y = safeY;
+        this.shieldCharges = 0;
+        this.speedTimer = 0;
+        this.doubleBarrelTimer = 0;
+    }
+
+    clearBuffs() {
+        this.shieldCharges = 0;
+        this.speedTimer = 0;
+        this.doubleBarrelTimer = 0;
+
+        // Reset client flags immediately
+        this.hasSpeed = false;
+        this.hasDoubleBarrel = false;
     }
 }
 

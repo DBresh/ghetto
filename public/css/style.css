@@ -152,13 +152,25 @@ html {
 
 .tank-barrel {
     position: absolute;
-    width: 80%; /* Sticks out past the turret */
-    height: 20%;
-    top: 40%;
-    left: 50%; /* Starts at the center of the turret */
+    width: 80%;
+    height: 15%;
+    left: 50%;
     background-color: #777;
     border: 1px solid #111;
-    transform-origin: left center; /* Ensures it rotates from the turret center */
+    transform-origin: left center;
+}
+
+/* Three separate barrel positions */
+.barrel-center {
+    top: 42.5%;
+}
+.barrel-left {
+    top: 15%;
+    display: none;
+}
+.barrel-right {
+    top: 70%;
+    display: none;
 }
 
 #player-hud {
@@ -248,7 +260,7 @@ html {
 #kill-feed {
     position: fixed;
     top: 20px;
-    right: 20px;
+    right: 150px;
     display: flex;
     flex-direction: column;
     align-items: flex-end;

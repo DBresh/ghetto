@@ -11,9 +11,10 @@ class Game {
         this.obstacles = [];
         this.setupObstacles();
         this.events = [];
-        this.relics = [];
-        for (let i = 0; i < CONSTANTS.RELIC_AMOUNT; i++) {
-            this.spawnRelic();
+
+        this.powerUps = [];
+        for (let i = 0; i < CONSTANTS.MAX_POWERUPS; i++) {
+            this.spawnPowerUp();
         }
 
         this.gameStartTime = Date.now();
@@ -34,10 +35,13 @@ class Game {
         ];
     }
 
-    spawnRelic() {
-        const pos = this.getSafePosition(30);
-        this.relics.push({
-            id: Math.random().toString(36).substring(2, 9), // Generate a random ID
+    spawnPowerUp() {
+        const pos = this.getSafePosition(CONSTANTS.POWERUP_SIZE);
+        const types = CONSTANTS.POWERUP_TYPES;
+
+        this.powerUps.push({
+            id: Math.random().toString(36).substring(2, 9),
+            type: types[Math.floor(Math.random() * types.length)], // Pick a random type!
             x: pos.x,
             y: pos.y,
         });
@@ -110,38 +114,85 @@ class Game {
     updatePlayers(dt, now) {
         for (const id in this.players) {
             const p = this.players[id];
-            p.update(dt, this.obstacles);
+            p.update(dt, this.obstacles, now);
 
             // Relic Collision
-            for (let i = this.relics.length - 1; i >= 0; i--) {
-                const r = this.relics[i];
+            for (let i = this.powerUps.length - 1; i >= 0; i--) {
+                const pu = this.powerUps[i];
                 if (
-                    p.x < r.x + 30 &&
-                    p.x + CONSTANTS.PLAYER_SIZE > r.x &&
-                    p.y < r.y + 30 &&
-                    p.y + CONSTANTS.PLAYER_SIZE > r.y
+                    p.x < pu.x + CONSTANTS.POWERUP_SIZE &&
+                    p.x + CONSTANTS.PLAYER_SIZE > pu.x &&
+                    p.y < pu.y + CONSTANTS.POWERUP_SIZE &&
+                    p.y + CONSTANTS.PLAYER_SIZE > pu.y
                 ) {
-                    p.score += 5;
-                    this.relics.splice(i, 1); // Remove collected relic
-                    this.spawnRelic(); // Spawn a new one somewhere else!
+                    // Apply the specific effect
+                    switch (pu.type) {
+                        case "RELIC":
+                            p.score += 5;
+                            p.heal(CONSTANTS.HEAL_AMOUNT);
+                            break;
+                        case "SPEED":
+                            p.clearBuffs(); // Wipe old buffs
+                            p.speedTimer = now + CONSTANTS.BUFF_DURATION;
+                            break;
+                        case "DOUBLE_BARREL":
+                            p.clearBuffs(); // Wipe old buffs
+                            p.doubleBarrelTimer = now + CONSTANTS.BUFF_DURATION;
+                            break;
+                        case "SHIELD":
+                            p.clearBuffs(); // Wipe old buffs
+                            p.shieldCharges = CONSTANTS.SHIELD_CHARGES;
+                            break;
+                    }
+
+                    this.powerUps.splice(i, 1);
+                    this.spawnPowerUp();
                 }
             }
 
             // Shooting
             if (p.canShoot(now)) {
                 p.lastShotTime = now;
-                const playerCenterX = p.x + CONSTANTS.PLAYER_SIZE / 2;
-                const playerCenterY = p.y + CONSTANTS.PLAYER_SIZE / 2;
+                const pCX = p.x + CONSTANTS.PLAYER_SIZE / 2;
+                const pCY = p.y + CONSTANTS.PLAYER_SIZE / 2;
 
-                this.bullets.push(
-                    new Projectile(
-                        this.bulletIdCounter++,
-                        p.id,
-                        playerCenterX,
-                        playerCenterY,
-                        p.turretAngle,
-                    ),
-                );
+                if (p.hasDoubleBarrel) {
+                    // Fire two parallel bullets!
+                    const offset = 10;
+                    const perpAngle = p.turretAngle + Math.PI / 2; // 90 degrees offset
+                    const offsetX = Math.cos(perpAngle) * offset;
+                    const offsetY = Math.sin(perpAngle) * offset;
+
+                    this.bullets.push(
+                        new Projectile(
+                            this.bulletIdCounter++,
+                            p.id,
+                            pCX + offsetX,
+                            pCY + offsetY,
+                            p.turretAngle,
+                        ),
+                    );
+                    this.bullets.push(
+                        new Projectile(
+                            this.bulletIdCounter++,
+                            p.id,
+                            pCX - offsetX,
+                            pCY - offsetY,
+                            p.turretAngle,
+                        ),
+                    );
+                } else {
+                    // Standard single shot
+                    this.bullets.push(
+                        new Projectile(
+                            this.bulletIdCounter++,
+                            p.id,
+                            pCX,
+                            pCY,
+                            p.turretAngle,
+                        ),
+                    );
+                }
             }
         }
     }
@@ -205,7 +256,7 @@ class Game {
         return {
             players: this.players,
             bullets: this.bullets,
-            relics: this.relics,
+            powerUps: this.powerUps,
             timeLeft: this.timeLeft,
             isGameOver: this.isGameOver,
         };
