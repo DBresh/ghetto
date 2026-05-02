@@ -69,6 +69,6 @@ setInterval(() => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`🚀 Game Server running on http://localhost:${PORT}`);
+    console.log(`Game Server running on http://localhost:${PORT}`);
     console.log(`Tick Rate set to: ${CONSTANTS.TICK_RATE}Hz`);
 });

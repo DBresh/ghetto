@@ -1,8 +1,8 @@
 // shared/constants.js
 const CONSTANTS = {
     // Virtual World Dimensions
-    WORLD_WIDTH: 3000,
-    WORLD_HEIGHT: 1500,
+    WORLD_WIDTH: 2000,
+    WORLD_HEIGHT: 1000,
 
     // Player Physics (Virtual Units)
     PLAYER_SIZE: 40,

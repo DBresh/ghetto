@@ -1,70 +1,71 @@
-const keys = {
-    up: false,
-    down: false,
-    left: false,
-    right: false,
-    shooting: false,
-    mouseX: 0,
-    mouseY: 0,
-};
+class InputController {
+    constructor() {
+        this.keys = {
+            up: false,
+            down: false,
+            left: false,
+            right: false,
+            shooting: false,
+            mouseX: 0,
+            mouseY: 0,
+        };
+        this.rawMouseX = window.innerWidth / 2;
+        this.rawMouseY = window.innerHeight / 2;
 
-const arenaElement = document.getElementById("game-arena");
-
-let rawMouseX = window.innerWidth / 2;
-let rawMouseY = window.innerHeight / 2;
-
-// Keyboard tracking
-window.addEventListener("keydown", (e) => {
-    if (e.code === "KeyW" || e.code === "ArrowUp") keys.up = true;
-    if (e.code === "KeyS" || e.code === "ArrowDown") keys.down = true;
-    if (e.code === "KeyA" || e.code === "ArrowLeft") keys.left = true;
-    if (e.code === "KeyD" || e.code === "ArrowRight") keys.right = true;
-});
-
-window.addEventListener("keyup", (e) => {
-    if (e.code === "KeyW" || e.code === "ArrowUp") keys.up = false;
-    if (e.code === "KeyS" || e.code === "ArrowDown") keys.down = false;
-    if (e.code === "KeyA" || e.code === "ArrowLeft") keys.left = false;
-    if (e.code === "KeyD" || e.code === "ArrowRight") keys.right = false;
-});
-
-// Mouse tracking
-window.addEventListener("mousemove", (e) => {
-    rawMouseX = e.clientX;
-    rawMouseY = e.clientY;
-});
-
-window.addEventListener("mousedown", () => {
-    // 1. Get our specific tank to make sure we aren't stunned
-    const myTank =
-        typeof socket !== "undefined"
-            ? STATE.serverState.players[socket.id]
-            : null;
-    if (myTank && myTank.isStunned) return;
-
-    // 2. Check the cooldown locally!
-    const now = Date.now();
-    if (now - STATE.lastShotTime >= CONSTANTS.FIRE_COOLDOWN) {
-        keys.shooting = true;
-        STATE.lastShotTime = now; // Start the UI cooldown timer
-        if (typeof AUDIO !== "undefined") AUDIO.play("shoot");
+        this.initListeners();
     }
-});
 
-window.addEventListener("mouseup", () => {
-    keys.shooting = false;
-});
+    initListeners() {
+        window.addEventListener("keydown", (e) => this.setKey(e.code, true));
+        window.addEventListener("keyup", (e) => this.setKey(e.code, false));
 
-function updateAimCoordinates() {
-    const arenaElement = document.getElementById("game-arena");
-    if (!arenaElement) return;
+        window.addEventListener("mousemove", (e) => {
+            this.rawMouseX = e.clientX;
+            this.rawMouseY = e.clientY;
+        });
 
-    const rect = arenaElement.getBoundingClientRect();
+        window.addEventListener("mousedown", () => {
+            // Safety check: Don't shoot if we are dead or don't exist yet
+            const myTank =
+                typeof socket !== "undefined"
+                    ? STATE.serverState.players[socket.id]
+                    : null;
+            if (myTank && myTank.hp <= 0) return;
 
-    // Find mouse's distance from the top-left of the currently shifted arena
-    const xRelativeToArena = rawMouseX - rect.left;
-    const yRelativeToArena = rawMouseY - rect.top;
+            // Enforce local cooldown
+            const now = Date.now();
+            if (now - STATE.lastShotTime >= CONSTANTS.FIRE_COOLDOWN) {
+                this.keys.shooting = true;
+                STATE.lastShotTime = now;
+                if (typeof AUDIO !== "undefined") AUDIO.play("shoot");
+            }
+        });
 
-    keys.mouseX = xRelativeToArena * (CONSTANTS.WORLD_WIDTH / rect.width);
-    keys.mouseY = yRelativeToArena * (CONSTANTS.WORLD_HEIGHT / rect.height);
+        window.addEventListener("mouseup", () => (this.keys.shooting = false));
+    }
+
+    setKey(code, isPressed) {
+        if (code === "KeyW" || code === "ArrowUp") this.keys.up = isPressed;
+        if (code === "KeyS" || code === "ArrowDown") this.keys.down = isPressed;
+        if (code === "KeyA" || code === "ArrowLeft") this.keys.left = isPressed;
+        if (code === "KeyD" || code === "ArrowRight")
+            this.keys.right = isPressed;
+    }
+
+    // Called by main.js every tick to get the freshest data
+    getProcessedInputs() {
+        const arenaElement = document.getElementById("game-arena");
+        if (arenaElement) {
+            const rect = arenaElement.getBoundingClientRect();
+            const xRel = this.rawMouseX - rect.left;
+            const yRel = this.rawMouseY - rect.top;
+
+            this.keys.mouseX = xRel * (CONSTANTS.WORLD_WIDTH / rect.width);
+            this.keys.mouseY = yRel * (CONSTANTS.WORLD_HEIGHT / rect.height);
+        }
+        return this.keys;
+    }
 }
+
+// Instantiate it globally for the network to use
+const INPUT = new InputController();

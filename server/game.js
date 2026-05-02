@@ -26,17 +26,15 @@ class Game {
     addPlayer(id) {
         this.players[id] = new Player(id);
     }
-
     removePlayer(id) {
         delete this.players[id];
     }
 
     handleInput(id, inputs) {
-        if (this.players[id]) {
-            this.players[id].inputs = inputs;
-        }
+        if (this.players[id]) this.players[id].inputs = inputs;
     }
 
+    // --- THE CLEANED UP MAIN LOOP ---
     update() {
         if (this.isGameOver || this.isPaused) return this.getState();
 
@@ -44,15 +42,25 @@ class Game {
         const dt = (now - this.lastUpdateTime) / 1000;
         this.lastUpdateTime = now;
 
-        // Timer Logic
+        this.updateTimer(now);
+        this.updatePlayers(dt, now);
+        this.updateBulletsAndCollisions(dt);
+
+        return this.getState();
+    }
+
+    // --- HELPER METHODS ---
+
+    updateTimer(now) {
         const elapsedSeconds = Math.floor((now - this.gameStartTime) / 1000);
         this.timeLeft = Math.max(0, CONSTANTS.MATCH_LENGTH - elapsedSeconds);
         if (this.timeLeft === 0) this.isGameOver = true;
+    }
 
-        // 1. UPDATE PLAYERS
+    updatePlayers(dt, now) {
         for (const id in this.players) {
             const p = this.players[id];
-            p.update(dt); // <--- Math is now handled inside the Player class!
+            p.update(dt);
 
             // Relic Collision
             if (
@@ -65,13 +73,12 @@ class Game {
                 this.spawnRelic();
             }
 
-            // Shooting Logic
+            // Shooting
             if (p.canShoot(now)) {
                 p.lastShotTime = now;
                 const playerCenterX = p.x + CONSTANTS.PLAYER_SIZE / 2;
                 const playerCenterY = p.y + CONSTANTS.PLAYER_SIZE / 2;
 
-                // Use the player's already-calculated turret angle!
                 this.bullets.push(
                     new Projectile(
                         this.bulletIdCounter++,
@@ -83,8 +90,9 @@ class Game {
                 );
             }
         }
+    }
 
-        // 2. UPDATE BULLETS & CHECK COLLISIONS
+    updateBulletsAndCollisions(dt) {
         for (let i = this.bullets.length - 1; i >= 0; i--) {
             const b = this.bullets[i];
             b.update(dt);
@@ -94,27 +102,21 @@ class Game {
                 continue;
             }
 
+            // Player Collision
             for (const targetId in this.players) {
                 const target = this.players[targetId];
-
-                // Ensure hitsPlayer exists and we don't shoot ourselves
                 if (b.hitsPlayer(target)) {
-                    // Apply damage. If it returns true, the target died!
                     const wasKilled = target.takeDamage(
                         CONSTANTS.BULLET_DAMAGE,
                     );
-
                     if (wasKilled && this.players[b.ownerId]) {
-                        this.players[b.ownerId].score += 1; // Award kill point
+                        this.players[b.ownerId].score += 1;
                     }
-
-                    this.bullets.splice(i, 1); // Destroy the bullet
+                    this.bullets.splice(i, 1);
                     break;
                 }
             }
         }
-
-        return this.getState();
     }
 
     getState() {
