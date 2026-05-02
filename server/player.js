@@ -25,12 +25,9 @@ class Player {
         this.baseAngle = 0;
         this.turretAngle = 0;
 
-        // --- NEW: Buff States ---
         this.shieldCharges = 0;
         this.speedTimer = 0;
         this.doubleBarrelTimer = 0;
-
-        // Client-friendly booleans
         this.hasSpeed = false;
         this.hasDoubleBarrel = false;
     }
@@ -42,13 +39,11 @@ class Player {
         this.hasSpeed = now < this.speedTimer;
         this.hasDoubleBarrel = now < this.doubleBarrelTimer;
 
-        // 1. Tank Chassis Rotation (A and D keys)
         if (this.inputs.left)
             this.baseAngle -= CONSTANTS.TANK_ROTATION_SPEED * dt;
         if (this.inputs.right)
             this.baseAngle += CONSTANTS.TANK_ROTATION_SPEED * dt;
 
-        // --- SPEED BOOST CALCULATION ---
         let currentSpeed = CONSTANTS.PLAYER_SPEED;
         if (this.hasSpeed) currentSpeed *= CONSTANTS.SPEED_MULTIPLIER;
         const frameSpeed = currentSpeed * dt;
@@ -63,7 +58,6 @@ class Player {
             );
         };
 
-        // 2. Tank Forward/Backward Movement (W and S keys)
         const speed = CONSTANTS.PLAYER_SPEED * dt;
         if (this.inputs.up) {
             this.x += Math.cos(this.baseAngle) * frameSpeed;
@@ -83,7 +77,6 @@ class Player {
             }
         }
 
-        // 3. Turret Rotation (Aim at mouse)
         const centerX = this.x + CONSTANTS.PLAYER_SIZE / 2;
         const centerY = this.y + CONSTANTS.PLAYER_SIZE / 2;
         this.turretAngle = Math.atan2(
@@ -91,7 +84,6 @@ class Player {
             this.inputs.mouseX - centerX,
         );
 
-        // Clamp to virtual bounds[cite: 4]
         this.x = Math.max(
             0,
             Math.min(this.x, CONSTANTS.WORLD_WIDTH - CONSTANTS.PLAYER_SIZE),
@@ -120,7 +112,7 @@ class Player {
         }
         this.hp -= amount;
         if (this.hp <= 0) {
-            return true; // Returns true if the tank was destroyed
+            return true;
         }
         return false;
     }
@@ -139,7 +131,6 @@ class Player {
         this.speedTimer = 0;
         this.doubleBarrelTimer = 0;
 
-        // Reset client flags immediately
         this.hasSpeed = false;
         this.hasDoubleBarrel = false;
     }

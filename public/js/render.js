@@ -1,13 +1,11 @@
 class GameRenderer {
     constructor() {
-        // DOM Elements
         this.arena = document.getElementById("game-arena");
         this.timerEl = document.getElementById("timer");
         this.scoreboardEl = document.getElementById("scoreboard");
         this.reloadBar = document.getElementById("reload-bar");
         this.hpBar = document.getElementById("hp-bar");
 
-        // State Memories
         this.previousScores = {};
         this.domPowerUps = {};
 
@@ -41,7 +39,6 @@ class GameRenderer {
     }
 
     start() {
-        // We use an arrow function here to preserve 'this' context
         const loop = () => {
             if (STATE.serverState) {
                 this.renderUI();
@@ -122,7 +119,6 @@ class GameRenderer {
                 const turret = document.createElement("div");
                 turret.classList.add("tank-turret");
 
-                // Build all three barrels
                 const bCenter = document.createElement("div");
                 bCenter.classList.add("tank-barrel", "barrel-center");
                 const bLeft = document.createElement("div");
@@ -152,13 +148,10 @@ class GameRenderer {
             domObj.base.style.transform = `rotate(${p.baseAngle}rad)`;
             domObj.turret.style.transform = `rotate(${p.turretAngle}rad)`;
 
-            // --- VISUAL BUFFS ---
-            // 1. Double Barrel Toggle
             domObj.bCenter.style.display = p.hasDoubleBarrel ? "none" : "block";
             domObj.bLeft.style.display = p.hasDoubleBarrel ? "block" : "none";
             domObj.bRight.style.display = p.hasDoubleBarrel ? "block" : "none";
 
-            // 2. Auras (Applied to the rotating base, preserving the CSS inset shadow!)
             const baseShadow = "inset 0 0 10px rgba(0,0,0,0.5)";
 
             if (p.shieldCharges > 0) {
@@ -166,7 +159,7 @@ class GameRenderer {
             } else if (p.hasSpeed) {
                 domObj.base.style.boxShadow = `${baseShadow}, 0 0 15px 5px blue`;
             } else {
-                domObj.base.style.boxShadow = baseShadow; // Reset back to default 3D depth
+                domObj.base.style.boxShadow = baseShadow;
             }
         }
     }
@@ -176,7 +169,7 @@ class GameRenderer {
             if (!STATE.serverState.players[domId]) {
                 STATE.playerElements[domId].root.remove();
                 delete STATE.playerElements[domId];
-                delete this.previousScores[domId]; // Clear memory
+                delete this.previousScores[domId];
             }
         }
     }
@@ -198,7 +191,6 @@ class GameRenderer {
     }
 
     renderRelics() {
-        // Renamed function to act on powerUps
         const activePowerUps = STATE.serverState.powerUps || [];
         const activeIds = new Set();
 
@@ -213,7 +205,6 @@ class GameRenderer {
                 el.style.borderRadius = "4px";
                 el.style.border = "2px solid white";
 
-                // Color code the boxes
                 if (pu.type === "RELIC") el.style.backgroundColor = "gold";
                 if (pu.type === "SPEED") el.style.backgroundColor = "blue";
                 if (pu.type === "DOUBLE_BARREL")
@@ -254,5 +245,4 @@ class GameRenderer {
     }
 }
 
-// Instantiate globally
 const RENDERER = new GameRenderer();

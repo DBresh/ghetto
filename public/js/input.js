@@ -25,14 +25,12 @@ class InputController {
         });
 
         window.addEventListener("mousedown", () => {
-            // Safety check: Don't shoot if we are dead or don't exist yet
             const myTank =
                 typeof socket !== "undefined"
                     ? STATE.serverState.players[socket.id]
                     : null;
             if (myTank && myTank.hp <= 0) return;
 
-            // Enforce local cooldown
             const now = Date.now();
             if (now - STATE.lastShotTime >= CONSTANTS.FIRE_COOLDOWN) {
                 this.keys.shooting = true;
@@ -45,7 +43,6 @@ class InputController {
     }
 
     setKey(code, isPressed) {
-        // If we are typing in chat, completely ignore new key presses!
         if (
             document.activeElement &&
             document.activeElement.id === "chat-input" &&
@@ -69,7 +66,6 @@ class InputController {
         this.keys.shooting = false;
     }
 
-    // Called by main.js every tick to get the freshest data
     getProcessedInputs() {
         const arenaElement = document.getElementById("game-arena");
         if (arenaElement) {
@@ -84,5 +80,4 @@ class InputController {
     }
 }
 
-// Instantiate it globally for the network to use
 const INPUT = new InputController();

@@ -17,18 +17,13 @@
             <div class="lobby-divider">OR JOIN EXISTING</div>
 
             <div id="lobby-list">
-                <!-- Active lobbies will be injected here via JS -->
                 <div style="text-align:center; color:#777;">Searching for matches...</div>
             </div>
         </div>
     </div>
 
-    <!-- The Virtual Game World -->
-    <div id="game-arena">
-        <!-- Player and Bullet DIVs will be injected here by JS -->
-    </div>
+    <div id="game-arena"></div>
 
-    <!-- UI Overlay -->
     <div id="ui-layer">
         <div id="timer">3:00</div>
         <div id="scoreboard">Waiting for players...</div>
@@ -47,10 +42,9 @@
         <div id="chat-messages"></div>
         <input type="text" id="chat-input" placeholder="Press Enter to chat..." autocomplete="off" maxlength="100">
     </div>
-    <!-- Event Log for announcements -->
+
     <div id="event-log"></div>
 
-    <!-- The Pause Menu -->
     <div id="menu-overlay" style="display: none;">
         <div class="menu-box">
             <h2>GAME PAUSED</h2>
@@ -59,7 +53,6 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="/shared/constants.js"></script>
     <script src="/js/state.js"></script>

@@ -20,7 +20,7 @@ class UIManager {
     }
 
     renderLobbyList(lobbies) {
-        this.lobbyList.innerHTML = ""; // Clear current
+        this.lobbyList.innerHTML = "";
 
         if (lobbies.length === 0) {
             this.lobbyList.innerHTML =
@@ -48,25 +48,22 @@ class UIManager {
 
     initMenuListeners() {
         window.addEventListener("keydown", (e) => {
-            // --- NEW: Chat Input Handling ---
             if (e.code === "Enter") {
                 if (document.activeElement === this.chatInput) {
-                    // We are done typing, send it!
                     const msg = this.chatInput.value.trim();
                     if (msg) socket.emit("chat_message", msg);
                     this.chatInput.value = "";
-                    this.chatInput.blur(); // Unfocus the input
+                    this.chatInput.blur();
                 } else {
-                    // We weren't typing, so open the chat and halt the tank!
                     if (typeof INPUT !== "undefined") INPUT.resetKeys();
                     this.chatInput.focus();
                 }
-                return; // Prevent Enter from doing anything else
+                return;
             }
 
             if (e.code === "Escape") {
                 if (document.activeElement === this.chatInput) {
-                    this.chatInput.blur(); // Cancel chat on Esc
+                    this.chatInput.blur();
                 } else {
                     if (STATE.isMenuOpen) socket.emit("action_resume");
                     else socket.emit("action_pause");
@@ -102,24 +99,20 @@ class UIManager {
         el.innerHTML = `<span style="color: ${color}; font-weight: bold;">Tank:</span> ${text}`;
         this.chatMessages.appendChild(el);
 
-        // Keep only the last 50 messages
         if (this.chatMessages.childElementCount > 50) {
             this.chatMessages.removeChild(this.chatMessages.firstChild);
         }
 
-        // Auto-scroll to the bottom
         this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
     }
 
     addKillFeedItem(killerColor, victimColor) {
         const el = document.createElement("div");
         el.className = "kill-feed-item";
-        // The bullet icon (➤) between the tanks
         el.innerHTML = `<span style="color: ${killerColor}">Tank</span> ➤ <span style="color: ${victimColor}">Tank</span>`;
 
         this.killFeed.appendChild(el);
 
-        // Clean up the DOM element after the CSS fade animation finishes (5 seconds)
         setTimeout(() => el.remove(), 5500);
     }
 
