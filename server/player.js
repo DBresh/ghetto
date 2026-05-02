@@ -26,7 +26,7 @@ class Player {
         this.turretAngle = 0;
     }
 
-    update(dt) {
+    update(dt, obstacles) {
         this.isFreshClick = this.inputs.shooting && !this.wasShooting;
         this.wasShooting = this.inputs.shooting;
 
@@ -36,15 +36,33 @@ class Player {
         if (this.inputs.right)
             this.baseAngle += CONSTANTS.TANK_ROTATION_SPEED * dt;
 
+        const isColliding = () => {
+            return obstacles.some(
+                (obs) =>
+                    this.x < obs.x + obs.w &&
+                    this.x + CONSTANTS.PLAYER_SIZE > obs.x &&
+                    this.y < obs.y + obs.h &&
+                    this.y + CONSTANTS.PLAYER_SIZE > obs.y,
+            );
+        };
+
         // 2. Tank Forward/Backward Movement (W and S keys)
         const speed = CONSTANTS.PLAYER_SPEED * dt;
         if (this.inputs.up) {
             this.x += Math.cos(this.baseAngle) * speed;
             this.y += Math.sin(this.baseAngle) * speed;
+            if (isColliding()) {
+                this.x -= Math.cos(this.baseAngle) * speed;
+                this.y -= Math.sin(this.baseAngle) * speed;
+            }
         }
         if (this.inputs.down) {
             this.x -= Math.cos(this.baseAngle) * speed;
             this.y -= Math.sin(this.baseAngle) * speed;
+            if (isColliding()) {
+                this.x += Math.cos(this.baseAngle) * speed;
+                this.y += Math.sin(this.baseAngle) * speed;
+            }
         }
 
         // 3. Turret Rotation (Aim at mouse)
@@ -77,19 +95,15 @@ class Player {
     takeDamage(amount) {
         this.hp -= amount;
         if (this.hp <= 0) {
-            this.respawn();
             return true; // Returns true if the tank was destroyed
         }
         return false;
     }
 
-    respawn() {
+    respawn(safeX, safeY) {
         this.hp = CONSTANTS.MAX_HP;
-        // Teleport to a new random location
-        this.x =
-            Math.random() * (CONSTANTS.WORLD_WIDTH - CONSTANTS.PLAYER_SIZE);
-        this.y =
-            Math.random() * (CONSTANTS.WORLD_HEIGHT - CONSTANTS.PLAYER_SIZE);
+        this.x = safeX;
+        this.y = safeY;
     }
 }
 

@@ -8,9 +8,13 @@ class Game {
         this.bullets = [];
         this.bulletIdCounter = 0;
         this.lastUpdateTime = Date.now();
-
-        this.relic = { x: 0, y: 0 };
-        this.spawnRelic();
+        this.obstacles = [];
+        this.setupObstacles();
+        this.events = [];
+        this.relics = [];
+        for (let i = 0; i < CONSTANTS.RELIC_AMOUNT; i++) {
+            this.spawnRelic();
+        }
 
         this.gameStartTime = Date.now();
         this.timeLeft = CONSTANTS.MATCH_LENGTH;
@@ -18,14 +22,33 @@ class Game {
         this.isPaused = false;
     }
 
+    setupObstacles() {
+        // A few strategically placed walls. Easy to add more later!
+        this.obstacles = [
+            // Center bunker
+            { id: "obs_1", x: 1300, y: 600, w: 400, h: 300, color: "#444" },
+            // Left flank wall
+            { id: "obs_2", x: 400, y: 200, w: 100, h: 800, color: "#444" },
+            // Right flank wall
+            { id: "obs_3", x: 2500, y: 500, w: 100, h: 800, color: "#444" },
+        ];
+    }
+
     spawnRelic() {
-        this.relic.x = Math.random() * (CONSTANTS.WORLD_WIDTH - 30);
-        this.relic.y = Math.random() * (CONSTANTS.WORLD_HEIGHT - 30);
+        const pos = this.getSafePosition(30);
+        this.relics.push({
+            id: Math.random().toString(36).substring(2, 9), // Generate a random ID
+            x: pos.x,
+            y: pos.y,
+        });
     }
 
     addPlayer(id) {
-        this.players[id] = new Player(id);
+        // Find a safe spot BEFORE creating the player
+        const pos = this.getSafePosition(CONSTANTS.PLAYER_SIZE);
+        this.players[id] = new Player(id, pos.x, pos.y);
     }
+
     removePlayer(id) {
         delete this.players[id];
     }
@@ -57,20 +80,51 @@ class Game {
         if (this.timeLeft === 0) this.isGameOver = true;
     }
 
+    getSafePosition(entitySize) {
+        let x, y, isSafe;
+        let attempts = 0;
+
+        do {
+            x = Math.random() * (CONSTANTS.WORLD_WIDTH - entitySize);
+            y = Math.random() * (CONSTANTS.WORLD_HEIGHT - entitySize);
+            isSafe = true;
+
+            // Check against every obstacle
+            for (const obs of this.obstacles) {
+                if (
+                    x < obs.x + obs.w &&
+                    x + entitySize > obs.x &&
+                    y < obs.y + obs.h &&
+                    y + entitySize > obs.y
+                ) {
+                    isSafe = false;
+                    break;
+                }
+            }
+            attempts++;
+        } while (!isSafe && attempts < 100); // Max 100 attempts to prevent infinite loops
+
+        return { x, y };
+    }
+
     updatePlayers(dt, now) {
         for (const id in this.players) {
             const p = this.players[id];
-            p.update(dt);
+            p.update(dt, this.obstacles);
 
             // Relic Collision
-            if (
-                p.x < this.relic.x + 30 &&
-                p.x + CONSTANTS.PLAYER_SIZE > this.relic.x &&
-                p.y < this.relic.y + 30 &&
-                p.y + CONSTANTS.PLAYER_SIZE > this.relic.y
-            ) {
-                p.score += 5;
-                this.spawnRelic();
+            for (let i = this.relics.length - 1; i >= 0; i--) {
+                const r = this.relics[i];
+                if (
+                    p.x < r.x + 30 &&
+                    p.x + CONSTANTS.PLAYER_SIZE > r.x &&
+                    p.y < r.y + 30 &&
+                    p.y + CONSTANTS.PLAYER_SIZE > r.y
+                ) {
+                    p.score += 5;
+                    this.relics.splice(i, 1); // Remove collected relic
+                    this.spawnRelic(); // Spawn a new one somewhere else!
+                }
             }
 
             // Shooting
@@ -101,6 +155,22 @@ class Game {
                 this.bullets.splice(i, 1);
                 continue;
             }
+            let hitWall = false;
+            for (const obs of this.obstacles) {
+                if (
+                    b.x > obs.x &&
+                    b.x < obs.x + obs.w &&
+                    b.y > obs.y &&
+                    b.y < obs.y + obs.h
+                ) {
+                    hitWall = true;
+                    break;
+                }
+            }
+            if (hitWall) {
+                this.bullets.splice(i, 1); // Destroy bullet
+                continue; // Move to next bullet
+            }
 
             // Player Collision
             for (const targetId in this.players) {
@@ -109,8 +179,20 @@ class Game {
                     const wasKilled = target.takeDamage(
                         CONSTANTS.BULLET_DAMAGE,
                     );
-                    if (wasKilled && this.players[b.ownerId]) {
-                        this.players[b.ownerId].score += 1;
+                    if (wasKilled) {
+                        if (this.players[b.ownerId]) {
+                            this.players[b.ownerId].score += 1;
+                            this.events.push({
+                                killerColor: this.players[b.ownerId].color,
+                                victimColor: target.color,
+                            });
+                        }
+
+                        // Give the victim a safe respawn!
+                        const safePos = this.getSafePosition(
+                            CONSTANTS.PLAYER_SIZE,
+                        );
+                        target.respawn(safePos.x, safePos.y);
                     }
                     this.bullets.splice(i, 1);
                     break;
@@ -123,7 +205,7 @@ class Game {
         return {
             players: this.players,
             bullets: this.bullets,
-            relic: this.relic,
+            relics: this.relics,
             timeLeft: this.timeLeft,
             isGameOver: this.isGameOver,
         };

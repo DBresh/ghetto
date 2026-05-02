@@ -21,6 +21,20 @@ socket.on("server_message", (msg) => {
     UI.showAnnouncement(msg);
 });
 
+socket.on("map_data", (data) => {
+    if (typeof buildObstacles === "function") {
+        buildObstacles(data.obstacles);
+    }
+});
+
+socket.on("chat_message", (data) => {
+    UI.addChatMessage(data.color, data.text);
+});
+
+socket.on("kill_event", (data) => {
+    UI.addKillFeedItem(data.killerColor, data.victimColor);
+});
+
 // 4. NETWORK OUTBOUND (Client -> Server)
 setInterval(() => {
     // Grab the freshly calculated math from our Input class and send it

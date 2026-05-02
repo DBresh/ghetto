@@ -4,20 +4,11 @@ const timerEl = document.getElementById("timer");
 const scoreboardEl = document.getElementById("scoreboard");
 const reloadBar = document.getElementById("reload-bar");
 const hpBar = document.getElementById("hp-bar");
+let domRelics = {};
 
 let previousScores = {};
 
 // --- INIT SETUP ---
-const relicWrapper = document.createElement("div");
-relicWrapper.classList.add("entity");
-relicWrapper.style.width = "30px";
-relicWrapper.style.height = "30px";
-const relicVisual = document.createElement("div");
-relicVisual.classList.add("relic");
-relicVisual.style.width = "100%";
-relicVisual.style.height = "100%";
-relicWrapper.appendChild(relicVisual);
-arena.appendChild(relicWrapper);
 
 function initRenderer() {
     for (let i = 0; i < STATE.MAX_BULLETS; i++) {
@@ -34,7 +25,7 @@ function initRenderer() {
 function renderLoop() {
     if (!STATE.serverState) return requestAnimationFrame(renderLoop);
 
-    renderRelic();
+    renderRelics();
     renderUI();
     renderPlayers();
     cleanupDisconnectedPlayers();
@@ -46,9 +37,41 @@ function renderLoop() {
 
 // --- RENDER HELPERS ---
 
-function renderRelic() {
-    if (STATE.serverState.relic) {
-        relicWrapper.style.transform = `translate3d(${STATE.serverState.relic.x}px, ${STATE.serverState.relic.y}px, 0)`;
+function renderRelics() {
+    const activeRelics = STATE.serverState.relics || [];
+    const activeIds = new Set();
+
+    // 1. Create and position active relics
+    activeRelics.forEach((r) => {
+        activeIds.add(r.id);
+
+        // If it doesn't exist on screen yet, build it
+        if (!domRelics[r.id]) {
+            const el = document.createElement("div");
+            el.classList.add("entity");
+            el.style.width = "30px";
+            el.style.height = "30px";
+
+            const visual = document.createElement("div");
+            visual.classList.add("relic");
+            visual.style.width = "100%";
+            visual.style.height = "100%";
+
+            el.appendChild(visual);
+            arena.appendChild(el);
+            domRelics[r.id] = el; // Save reference
+        }
+
+        // Move it
+        domRelics[r.id].style.transform = `translate3d(${r.x}px, ${r.y}px, 0)`;
+    });
+
+    // 2. Ghost Buster for Relics (Destroy picked-up relics)
+    for (const domId in domRelics) {
+        if (!activeIds.has(domId)) {
+            domRelics[domId].remove();
+            delete domRelics[domId];
+        }
     }
 }
 
@@ -145,6 +168,27 @@ function cleanupDisconnectedPlayers() {
             delete STATE.playerElements[domId];
         }
     }
+}
+
+function buildObstacles(obstaclesData) {
+    const arenaEl = document.getElementById("game-arena");
+
+    obstaclesData.forEach((obs) => {
+        const el = document.createElement("div");
+        el.style.position = "absolute";
+        el.style.left = `${obs.x}px`;
+        el.style.top = `${obs.y}px`;
+        el.style.width = `${obs.w}px`;
+        el.style.height = `${obs.h}px`;
+        el.style.backgroundColor = obs.color;
+
+        // Add a subtle border or shadow to make them look like solid walls
+        el.style.border = "2px solid #222";
+        el.style.boxShadow = "inset 0 0 20px rgba(0,0,0,0.8)";
+        el.style.zIndex = 5; // Put them above the floor, but below UI
+
+        arenaEl.appendChild(el);
+    });
 }
 
 function renderBullets() {

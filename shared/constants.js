@@ -21,6 +21,7 @@ const CONSTANTS = {
 
     MAX_HP: 100,
     BULLET_DAMAGE: 34,
+    RELIC_AMOUNT: 4,
 };
 
 // Universal export for both Node.js and the Browser

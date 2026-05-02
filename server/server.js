@@ -58,14 +58,37 @@ io.on("connection", (socket) => {
         game.removePlayer(socket.id);
         io.emit("player_left", socket.id);
     });
+
+    socket.emit("map_data", {
+        width: CONSTANTS.WORLD_WIDTH,
+        height: CONSTANTS.WORLD_HEIGHT,
+        obstacles: game.obstacles,
+    });
+
+    socket.on("chat_message", (msg) => {
+        const cleanMsg = String(msg).trim().substring(0, 100);
+        if (cleanMsg && game.players[socket.id]) {
+            io.emit("chat_message", {
+                color: game.players[socket.id].color,
+                text: cleanMsg,
+            });
+        }
+    });
 });
 
 // THE MASTER TICK LOOP
 // This runs constantly, calculates math, and shouts the result to everyone
 setInterval(() => {
-    const worldState = game.update();
-    io.emit("state_update", worldState);
-}, 1000 / CONSTANTS.TICK_RATE); // 1000ms / 60 = ~16.6ms per tick
+    const state = game.update();
+
+    // If anyone died this frame, tell all clients!
+    if (game.events.length > 0) {
+        game.events.forEach((ev) => io.emit("kill_event", ev));
+        game.events = []; // Clear the queue
+    }
+
+    io.emit("state_update", state);
+}, 1000 / CONSTANTS.TICK_RATE);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

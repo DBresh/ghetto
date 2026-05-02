@@ -45,11 +45,28 @@ class InputController {
     }
 
     setKey(code, isPressed) {
+        // If we are typing in chat, completely ignore new key presses!
+        if (
+            document.activeElement &&
+            document.activeElement.id === "chat-input" &&
+            isPressed
+        ) {
+            return;
+        }
+
         if (code === "KeyW" || code === "ArrowUp") this.keys.up = isPressed;
         if (code === "KeyS" || code === "ArrowDown") this.keys.down = isPressed;
         if (code === "KeyA" || code === "ArrowLeft") this.keys.left = isPressed;
         if (code === "KeyD" || code === "ArrowRight")
             this.keys.right = isPressed;
+    }
+
+    resetKeys() {
+        this.keys.up = false;
+        this.keys.down = false;
+        this.keys.left = false;
+        this.keys.right = false;
+        this.keys.shooting = false;
     }
 
     // Called by main.js every tick to get the freshest data
