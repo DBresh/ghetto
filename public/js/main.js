@@ -1,6 +1,9 @@
 const socket = io();
 const menuOverlay = document.getElementById("menu-overlay");
 const eventLog = document.getElementById("event-log");
+const arenaEl = document.getElementById("game-arena");
+arenaEl.style.width = `${CONSTANTS.WORLD_WIDTH}px`;
+arenaEl.style.height = `${CONSTANTS.WORLD_HEIGHT}px`;
 
 initRenderer();
 
@@ -9,6 +12,10 @@ socket.on("state_update", (state) => {
 });
 
 setInterval(() => {
+    if (typeof updateAimCoordinates === "function") {
+        updateAimCoordinates();
+    }
+
     socket.emit("player_input", keys);
 }, 1000 / CONSTANTS.TICK_RATE);
 
@@ -46,7 +53,7 @@ document.getElementById("btn-quit").addEventListener("click", () => {
 });
 
 function resizeArena() {
-    const arenaEl = document.getElementById("game-arena");
+    arenaEl = document.getElementById("game-arena");
     const scaleX = window.innerWidth / CONSTANTS.WORLD_WIDTH;
     const scaleY = window.innerHeight / CONSTANTS.WORLD_HEIGHT;
     const scale = Math.min(scaleX, scaleY) * 0.95;

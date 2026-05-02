@@ -4,4 +4,5 @@ const STATE = {
     bulletPool: [],
     MAX_BULLETS: 50,
     isMenuOpen: false,
+    lastShotTime: 0,
 };

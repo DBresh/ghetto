@@ -70,18 +70,15 @@ class Game {
                 p.lastShotTime = now;
                 const playerCenterX = p.x + CONSTANTS.PLAYER_SIZE / 2;
                 const playerCenterY = p.y + CONSTANTS.PLAYER_SIZE / 2;
-                const angle = Math.atan2(
-                    p.inputs.mouseY - playerCenterY,
-                    p.inputs.mouseX - playerCenterX,
-                );
 
+                // Use the player's already-calculated turret angle!
                 this.bullets.push(
                     new Projectile(
                         this.bulletIdCounter++,
                         p.id,
                         playerCenterX,
                         playerCenterY,
-                        angle,
+                        p.turretAngle,
                     ),
                 );
             }
@@ -100,11 +97,18 @@ class Game {
             for (const targetId in this.players) {
                 const target = this.players[targetId];
 
+                // Ensure hitsPlayer exists and we don't shoot ourselves
                 if (b.hitsPlayer(target)) {
-                    target.stun();
-                    if (this.players[b.ownerId])
-                        this.players[b.ownerId].score += 1;
-                    this.bullets.splice(i, 1);
+                    // Apply damage. If it returns true, the target died!
+                    const wasKilled = target.takeDamage(
+                        CONSTANTS.BULLET_DAMAGE,
+                    );
+
+                    if (wasKilled && this.players[b.ownerId]) {
+                        this.players[b.ownerId].score += 1; // Award kill point
+                    }
+
+                    this.bullets.splice(i, 1); // Destroy the bullet
                     break;
                 }
             }

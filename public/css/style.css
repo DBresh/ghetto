@@ -8,17 +8,16 @@ html {
     overflow: hidden;
     font-family: monospace;
     color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 #game-arena {
-    position: relative;
-    width: 1000px;
-    height: 1000px;
+    position: absolute;
+    top: 0;
+    left: 0;
     background-color: #1a1a1a;
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    transform-origin: 0 0; /* Ensures our camera math scales from the top left */
+    will-change: transform; /* Hardware acceleration for the camera */
 }
 
 /* Base class for ALL moving objects */
@@ -118,4 +117,89 @@ html {
     color: #ffaa00;
     font-size: 14px;
     pointer-events: none;
+}
+
+.player-wrapper {
+    /* The wrapper is invisible, it just holds the tank parts */
+    position: absolute;
+    will-change: transform;
+}
+
+.tank-base {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); /* Adds depth */
+    /* Add a dark stripe on the right side so players know which way is "Front" */
+    border-right: 6px solid rgba(0, 0, 0, 0.7);
+    box-sizing: border-box;
+    will-change: transform;
+}
+
+.tank-turret {
+    position: absolute;
+    width: 60%;
+    height: 60%;
+    top: 20%;
+    left: 20%;
+    background-color: #333;
+    border-radius: 50%;
+    border: 2px solid #111;
+    box-sizing: border-box;
+    will-change: transform;
+}
+
+.tank-barrel {
+    position: absolute;
+    width: 80%; /* Sticks out past the turret */
+    height: 20%;
+    top: 40%;
+    left: 50%; /* Starts at the center of the turret */
+    background-color: #777;
+    border: 1px solid #111;
+    transform-origin: left center; /* Ensures it rotates from the turret center */
+}
+
+#player-hud {
+    position: fixed; /* Anchors to the screen, not the document */
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Space between HP and Reload */
+    z-index: 1000; /* Stays on top of everything */
+    pointer-events: none; /* Mouse clicks pass through it */
+}
+
+.hud-bar-bg {
+    width: 250px;
+    background: #222;
+    border: 2px solid #555;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+#hp-container {
+    height: 20px;
+}
+#reload-container {
+    height: 8px;
+}
+
+#hp-bar {
+    width: 100%;
+    height: 100%;
+    background: #ff3366; /* Vibrant Red/Pink for Health */
+    transform-origin: left;
+    transition: transform 0.1s ease-out; /* Smooth damage chunking */
+}
+
+#reload-bar {
+    width: 100%;
+    height: 100%;
+    background: #00ffcc;
+    transform-origin: left;
+    will-change: transform;
 }
