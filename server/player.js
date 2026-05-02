@@ -66,19 +66,20 @@ class Player {
         // 2. Tank Forward/Backward Movement (W and S keys)
         const speed = CONSTANTS.PLAYER_SPEED * dt;
         if (this.inputs.up) {
-            this.x += Math.cos(this.baseAngle) * speed;
-            this.y += Math.sin(this.baseAngle) * speed;
+            this.x += Math.cos(this.baseAngle) * frameSpeed;
+            this.y += Math.sin(this.baseAngle) * frameSpeed;
             if (isColliding()) {
-                this.x -= Math.cos(this.baseAngle) * speed;
-                this.y -= Math.sin(this.baseAngle) * speed;
+                this.x -= Math.cos(this.baseAngle) * frameSpeed;
+                this.y -= Math.sin(this.baseAngle) * frameSpeed;
             }
         }
+
         if (this.inputs.down) {
-            this.x -= Math.cos(this.baseAngle) * speed;
-            this.y -= Math.sin(this.baseAngle) * speed;
+            this.x -= Math.cos(this.baseAngle) * frameSpeed;
+            this.y -= Math.sin(this.baseAngle) * frameSpeed;
             if (isColliding()) {
-                this.x += Math.cos(this.baseAngle) * speed;
-                this.y += Math.sin(this.baseAngle) * speed;
+                this.x += Math.cos(this.baseAngle) * frameSpeed;
+                this.y += Math.sin(this.baseAngle) * frameSpeed;
             }
         }
 

@@ -9,6 +9,16 @@ arenaEl.style.width = `${CONSTANTS.WORLD_WIDTH}px`;
 arenaEl.style.height = `${CONSTANTS.WORLD_HEIGHT}px`;
 
 // 3. NETWORK INBOUND (Server -> Client)
+
+socket.on("lobby_list_update", (lobbies) => {
+    UI.renderLobbyList(lobbies);
+});
+
+socket.on("joined_lobby", (roomId) => {
+    console.log(`Joined Room: ${roomId}`);
+    UI.enterGame(); // Hide the lobby UI!
+});
+
 socket.on("state_update", (state) => {
     STATE.serverState = state;
 });

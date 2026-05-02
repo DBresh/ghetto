@@ -26,7 +26,7 @@ const CONSTANTS = {
     POWERUP_TYPES: ["RELIC", "SPEED", "DOUBLE_BARREL", "SHIELD"],
     BUFF_DURATION: 6000, // 6 seconds for temporary buffs
     HEAL_AMOUNT: 25,
-    SPEED_MULTIPLIER: 5,
+    SPEED_MULTIPLIER: 2,
     SHIELD_CHARGES: 2,
     MAX_POWERUPS: 8,
 };

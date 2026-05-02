@@ -4,9 +4,46 @@ class UIManager {
         this.chatInput = document.getElementById("chat-input");
         this.chatMessages = document.getElementById("chat-messages");
         this.killFeed = document.getElementById("kill-feed");
+        this.lobbyScreen = document.getElementById("lobby-screen");
+        this.lobbyList = document.getElementById("lobby-list");
+        this.btnCreate = document.getElementById("btn-create-lobby");
         this.logTimeout = null;
 
         this.initMenuListeners();
+        this.initLobbyListeners();
+    }
+
+    initLobbyListeners() {
+        this.btnCreate.addEventListener("click", () => {
+            socket.emit("create_lobby");
+        });
+    }
+
+    renderLobbyList(lobbies) {
+        this.lobbyList.innerHTML = ""; // Clear current
+
+        if (lobbies.length === 0) {
+            this.lobbyList.innerHTML =
+                '<div style="text-align:center; color:#777;">No active matches. Create one!</div>';
+            return;
+        }
+
+        lobbies.forEach((lobby) => {
+            const el = document.createElement("div");
+            el.className = "lobby-item";
+            el.innerHTML = `
+                <div>
+                    <strong>Match: ${lobby.id}</strong><br>
+                    <span style="color:#aaa; font-size: 12px;">Players: ${lobby.players}</span>
+                </div>
+                <button class="btn-join" onclick="socket.emit('join_lobby', '${lobby.id}')">JOIN</button>
+            `;
+            this.lobbyList.appendChild(el);
+        });
+    }
+
+    enterGame() {
+        this.lobbyScreen.style.display = "none";
     }
 
     initMenuListeners() {

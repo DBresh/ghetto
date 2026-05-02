@@ -9,6 +9,20 @@
 </head>
 
 <body>
+    <div id="lobby-screen">
+        <div class="lobby-panel">
+            <h1>TANK WARFARE</h1>
+            <button id="btn-create-lobby" class="action-btn">Create New Match</button>
+
+            <div class="lobby-divider">OR JOIN EXISTING</div>
+
+            <div id="lobby-list">
+                <!-- Active lobbies will be injected here via JS -->
+                <div style="text-align:center; color:#777;">Searching for matches...</div>
+            </div>
+        </div>
+    </div>
+
     <!-- The Virtual Game World -->
     <div id="game-arena">
         <!-- Player and Bullet DIVs will be injected here by JS -->
