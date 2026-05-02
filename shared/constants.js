@@ -15,7 +15,7 @@ const CONSTANTS = {
 
     // Game Rules
     TICK_RATE: 60, // Server physics calculations per second
-    MATCH_LENGTH: 180, // 3 minutes in seconds
+    MATCH_LENGTH: 1000, // 3 minutes in seconds
     MAX_PLAYERS: 4,
 };
 

@@ -34,5 +34,9 @@ window.addEventListener("mousemove", (e) => {
     keys.mouseY = yRelativeToArena * (CONSTANTS.WORLD_HEIGHT / rect.height);
 });
 
-window.addEventListener("mousedown", () => (keys.shooting = true));
+window.addEventListener("mousedown", () => {
+    keys.shooting = true;
+    AUDIO.play("shoot");
+});
+
 window.addEventListener("mouseup", () => (keys.shooting = false));
