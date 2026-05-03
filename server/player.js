@@ -32,17 +32,15 @@ class Player {
         this.hasDoubleBarrel = false;
     }
 
-    update(dt, obstacles, now) {
+    update(dt, game, now) {
         this.isFreshClick = this.inputs.shooting && !this.wasShooting;
         this.wasShooting = this.inputs.shooting;
 
         this.hasSpeed = now < this.speedTimer;
         this.hasDoubleBarrel = now < this.doubleBarrelTimer;
 
-        if (this.inputs.left)
-            this.baseAngle -= CONSTANTS.TANK_ROTATION_SPEED * dt;
-        if (this.inputs.right)
-            this.baseAngle += CONSTANTS.TANK_ROTATION_SPEED * dt;
+        if (this.inputs.left) this.baseAngle -= CONSTANTS.TANK_ROTATION_SPEED * dt;
+        if (this.inputs.right) this.baseAngle += CONSTANTS.TANK_ROTATION_SPEED * dt;
 
         let currentSpeed = CONSTANTS.PLAYER_SPEED;
         if (this.hasSpeed) currentSpeed *= CONSTANTS.SPEED_MULTIPLIER;
@@ -61,51 +59,25 @@ class Player {
         }
 
         this.x += moveX;
-        if (
-            game.checkWallCollision(
-                this.x,
-                this.y,
-                CONSTANTS.PLAYER_WIDTH,
-                CONSTANTS.PLAYER_HEIGHT,
-            )
-        ) {
+        if (game.checkWallCollision(this.x, this.y, CONSTANTS.PLAYER_WIDTH, CONSTANTS.PLAYER_HEIGHT)) {
             this.x -= moveX;
         }
 
         this.y += moveY;
-        if (
-            game.checkWallCollision(
-                this.x,
-                this.y,
-                CONSTANTS.PLAYER_WIDTH,
-                CONSTANTS.PLAYER_HEIGHT,
-            )
-        ) {
+        if (game.checkWallCollision(this.x, this.y, CONSTANTS.PLAYER_WIDTH, CONSTANTS.PLAYER_HEIGHT)) {
             this.y -= moveY;
         }
 
         const centerX = this.x + CONSTANTS.PLAYER_WIDTH / 2;
         const centerY = this.y + CONSTANTS.PLAYER_HEIGHT / 2;
-        this.turretAngle = Math.atan2(
-            this.inputs.mouseY - centerY,
-            this.inputs.mouseX - centerX,
-        );
+        this.turretAngle = Math.atan2(this.inputs.mouseY - centerY, this.inputs.mouseX - centerX);
 
-        this.x = Math.max(
-            0,
-            Math.min(this.x, CONSTANTS.WORLD_WIDTH - CONSTANTS.PLAYER_WIDTH),
-        );
-        this.y = Math.max(
-            0,
-            Math.min(this.y, CONSTANTS.WORLD_HEIGHT - CONSTANTS.PLAYER_HEIGHT),
-        );
+        this.x = Math.max(0, Math.min(this.x, CONSTANTS.WORLD_WIDTH - CONSTANTS.PLAYER_WIDTH));
+        this.y = Math.max(0, Math.min(this.y, CONSTANTS.WORLD_HEIGHT - CONSTANTS.PLAYER_HEIGHT));
     }
 
     canShoot(now) {
-        return (
-            this.isFreshClick &&
-            now - this.lastShotTime > CONSTANTS.FIRE_COOLDOWN
-        );
+        return this.isFreshClick && now - this.lastShotTime > CONSTANTS.FIRE_COOLDOWN;
     }
 
     heal(amount) {

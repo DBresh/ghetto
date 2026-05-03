@@ -28,8 +28,7 @@ io.on("connection", (socket) => {
     broadcastLobbyList();
 
     socket.on("create_lobby", (data) => {
-        const roomId =
-            "ROOM_" + Math.random().toString(36).substring(2, 8).toUpperCase();
+        const roomId = "ROOM_" + Math.random().toString(36).substring(2, 8).toUpperCase();
         activeGames[roomId] = new Game();
         joinRoom(socket, roomId, data.name);
         broadcastLobbyList();
@@ -115,10 +114,7 @@ io.on("connection", (socket) => {
 
     socket.on("action_resume", () => {
         const game = activeGames[socket.roomId];
-        if (
-            game &&
-            (game.pausedBy === socket.id || !game.players[game.pausedBy])
-        ) {
+        if (game && (game.pausedBy === socket.id || !game.players[game.pausedBy])) {
             game.isPaused = false;
             game.pausedBy = null;
             io.to(socket.roomId).emit("pause_state_changed", {

@@ -1,7 +1,20 @@
-// shared/constants.js
+const TILE_SIZE = 100;
+const CLASSIC_MAP = [
+    "....................",
+    "..BB..BB....BB..BB..",
+    "..BB..BB....BB..BB..",
+    "..BB..BB....BB..BB..",
+    "..BB..BB.SS.BB..BB..",
+    "..BB..BB....BB..BB..",
+    "........BBBB........",
+    "..BB..B......B..BB..",
+    "..BB..B..BB..B..BB..",
+    ".........BB.........",
+];
+
 const CONSTANTS = {
-    WORLD_WIDTH: 2000,
-    WORLD_HEIGHT: 2000,
+    WORLD_WIDTH: CLASSIC_MAP[0].length * TILE_SIZE,
+    WORLD_HEIGHT: CLASSIC_MAP.length * TILE_SIZE,
 
     PLAYER_WIDTH: 66,
     PLAYER_HEIGHT: 40,
@@ -27,19 +40,8 @@ const CONSTANTS = {
     SHIELD_CHARGES: 2,
     MAX_POWERUPS: 5,
 
-    TILE_SIZE: 40,
-    CLASSIC_MAP: [
-        "....................",
-        "..BB..BB....BB..BB..",
-        "..BB..BB....BB..BB..",
-        "..BB..BB....BB..BB..",
-        "..BB..BB.SS.BB..BB..",
-        "..BB..BB....BB..BB..",
-        "........BBBB........",
-        "..BB..B......B..BB..",
-        "..BB..B..BB..B..BB..",
-        ".........BB.........",
-    ],
+    TILE_SIZE: TILE_SIZE,
+    CLASSIC_MAP: CLASSIC_MAP,
 };
 
 if (typeof module !== "undefined" && module.exports) {

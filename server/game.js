@@ -4,6 +4,9 @@ const Projectile = require("./projectile");
 
 class Game {
     constructor() {
+        this.mapGrid = [];
+        this.buildMap();
+
         this.players = {};
         this.bullets = [];
         this.bulletIdCounter = 0;
@@ -22,9 +25,6 @@ class Game {
         this.isGameOver = false;
         this.isPaused = false;
         this.pausedBy = null;
-
-        this.mapGrid = [];
-        this.buildMap();
     }
 
     buildMap() {
@@ -43,12 +43,7 @@ class Game {
         const startRow = Math.floor(y / CONSTANTS.TILE_SIZE);
         const endRow = Math.floor((y + height - 0.1) / CONSTANTS.TILE_SIZE);
 
-        if (
-            startCol < 0 ||
-            endCol >= this.mapGrid[0].length ||
-            startRow < 0 ||
-            endRow >= this.mapGrid.length
-        ) {
+        if (startCol < 0 || endCol >= this.mapGrid[0].length || startRow < 0 || endRow >= this.mapGrid.length) {
             return true;
         }
 
@@ -72,10 +67,7 @@ class Game {
     }
 
     spawnPowerUp() {
-        const pos = this.getSafePosition(
-            CONSTANTS.POWERUP_SIZE,
-            CONSTANTS.POWERUP_SIZE,
-        );
+        const pos = this.getSafePosition(CONSTANTS.POWERUP_SIZE, CONSTANTS.POWERUP_SIZE);
         const types = CONSTANTS.POWERUP_TYPES;
 
         this.powerUps.push({
@@ -87,10 +79,7 @@ class Game {
     }
 
     addPlayer(id, name) {
-        const pos = this.getSafePosition(
-            CONSTANTS.PLAYER_WIDTH,
-            CONSTANTS.PLAYER_HEIGHT,
-        );
+        const pos = this.getSafePosition(CONSTANTS.PLAYER_WIDTH, CONSTANTS.PLAYER_HEIGHT);
         this.players[id] = new Player(id, pos.x, pos.y, name);
     }
 
@@ -133,21 +122,16 @@ class Game {
         do {
             x = Math.random() * (CONSTANTS.WORLD_WIDTH - entityWidth);
             y = Math.random() * (CONSTANTS.WORLD_HEIGHT - entityHeight);
-            isSafe = true;
 
-            for (const obs of this.obstacles) {
-                if (
-                    x < obs.x + obs.w &&
-                    x + entityWidth > obs.x &&
-                    y < obs.y + obs.h &&
-                    y + entityHeight > obs.y
-                ) {
-                    isSafe = false;
-                    break;
-                }
-            }
+            isSafe = !this.checkWallCollision(x, y, entityWidth, entityHeight);
+
             attempts++;
         } while (!isSafe && attempts < 100);
+
+        if (!isSafe) {
+            x = 0;
+            y = 0;
+        }
 
         return { x, y };
     }
@@ -155,7 +139,7 @@ class Game {
     updatePlayers(dt, now) {
         for (const id in this.players) {
             const p = this.players[id];
-            p.update(dt, this.obstacles, now);
+            p.update(dt, this, now);
 
             for (let i = this.powerUps.length - 1; i >= 0; i--) {
                 const pu = this.powerUps[i];
@@ -201,33 +185,13 @@ class Game {
                     const offsetY = Math.sin(perpAngle) * offset;
 
                     this.bullets.push(
-                        new Projectile(
-                            this.bulletIdCounter++,
-                            p.id,
-                            pCX + offsetX,
-                            pCY + offsetY,
-                            p.turretAngle,
-                        ),
+                        new Projectile(this.bulletIdCounter++, p.id, pCX + offsetX, pCY + offsetY, p.turretAngle),
                     );
                     this.bullets.push(
-                        new Projectile(
-                            this.bulletIdCounter++,
-                            p.id,
-                            pCX - offsetX,
-                            pCY - offsetY,
-                            p.turretAngle,
-                        ),
+                        new Projectile(this.bulletIdCounter++, p.id, pCX - offsetX, pCY - offsetY, p.turretAngle),
                     );
                 } else {
-                    this.bullets.push(
-                        new Projectile(
-                            this.bulletIdCounter++,
-                            p.id,
-                            pCX,
-                            pCY,
-                            p.turretAngle,
-                        ),
-                    );
+                    this.bullets.push(new Projectile(this.bulletIdCounter++, p.id, pCX, pCY, p.turretAngle));
                 }
             }
         }
@@ -238,23 +202,15 @@ class Game {
             const b = this.bullets[i];
             b.update(dt);
 
-            if (b.isOutOfBounds()) {
-                this.bullets.splice(i, 1);
-                continue;
-            }
-            let hitWall = false;
-            for (const obs of this.obstacles) {
-                if (
-                    b.x > obs.x &&
-                    b.x < obs.x + obs.w &&
-                    b.y > obs.y &&
-                    b.y < obs.y + obs.h
-                ) {
-                    hitWall = true;
-                    break;
-                }
-            }
-            if (hitWall) {
+            const bSize = CONSTANTS.BULLET_SIZE || 8;
+
+            if (
+                b.x < 0 ||
+                b.x + bSize > CONSTANTS.WORLD_WIDTH ||
+                b.y < 0 ||
+                b.y + bSize > CONSTANTS.WORLD_HEIGHT ||
+                this.checkWallCollision(b.x, b.y, bSize, bSize)
+            ) {
                 this.bullets.splice(i, 1);
                 continue;
             }
@@ -264,9 +220,7 @@ class Game {
 
                 const target = this.players[targetId];
                 if (b.hitsPlayer(target)) {
-                    const wasKilled = target.takeDamage(
-                        CONSTANTS.BULLET_DAMAGE,
-                    );
+                    const wasKilled = target.takeDamage(CONSTANTS.BULLET_DAMAGE);
                     if (wasKilled) {
                         if (this.players[b.ownerId]) {
                             this.players[b.ownerId].score += 1;
@@ -278,10 +232,7 @@ class Game {
                             });
                         }
 
-                        const safePos = this.getSafePosition(
-                            CONSTANTS.PLAYER_WIDTH,
-                            CONSTANTS.PLAYER_HEIGHT,
-                        );
+                        const safePos = this.getSafePosition(CONSTANTS.PLAYER_WIDTH, CONSTANTS.PLAYER_HEIGHT);
                         target.respawn(safePos.x, safePos.y);
                     }
                     this.bullets.splice(i, 1);
