@@ -22,20 +22,28 @@ class GameRenderer {
         }
     }
 
-    buildObstacles(obstaclesData) {
-        obstaclesData.forEach((obs) => {
-            const el = document.createElement("div");
-            el.style.position = "absolute";
-            el.style.left = `${obs.x}px`;
-            el.style.top = `${obs.y}px`;
-            el.style.width = `${obs.w}px`;
-            el.style.height = `${obs.h}px`;
-            el.style.backgroundColor = obs.color;
-            el.style.border = "2px solid #222";
-            el.style.boxShadow = "inset 0 0 20px rgba(0,0,0,0.8)";
-            el.style.zIndex = 5;
-            this.arena.appendChild(el);
-        });
+    buildObstacles(mapGrid) {
+        this.arena.innerHTML = ""; // Clear existing map
+
+        for (let r = 0; r < mapGrid.length; r++) {
+            for (let c = 0; c < mapGrid[r].length; c++) {
+                const tileType = mapGrid[r][c];
+
+                if (tileType !== ".") {
+                    const el = document.createElement("div");
+                    el.style.position = "absolute";
+                    el.style.left = `${c * CONSTANTS.TILE_SIZE}px`;
+                    el.style.top = `${r * CONSTANTS.TILE_SIZE}px`;
+                    el.style.width = `${CONSTANTS.TILE_SIZE}px`;
+                    el.style.height = `${CONSTANTS.TILE_SIZE}px`;
+
+                    if (tileType === "B") el.classList.add("wall-brick");
+                    if (tileType === "S") el.classList.add("wall-steel");
+
+                    this.arena.appendChild(el);
+                }
+            }
+        }
     }
 
     start() {
@@ -122,6 +130,8 @@ class GameRenderer {
                 nameTag.style.fontWeight = "bold";
                 nameTag.style.whiteSpace = "nowrap";
                 nameTag.style.textShadow = "1px 1px 3px black";
+                nameTag.style.userSelect = "none";
+                nameTag.style.pointerEvents = "none";
 
                 const base = document.createElement("div");
                 base.classList.add("tank-base");
@@ -160,7 +170,7 @@ class GameRenderer {
             const domObj = STATE.playerElements[id];
             domObj.root.style.transform = `translate3d(${p.x}px, ${p.y}px, 0)`;
             domObj.base.style.transform = `rotate(${p.baseAngle}rad)`;
-            domObj.turret.style.transform = `rotate(${p.turretAngle}rad)`;
+            domObj.turret.style.transform = `translate(-50%, -50%) rotate(${p.turretAngle}rad)`;
 
             domObj.bCenter.style.display = p.hasDoubleBarrel ? "none" : "block";
             domObj.bLeft.style.display = p.hasDoubleBarrel ? "block" : "none";
@@ -250,9 +260,9 @@ class GameRenderer {
             const screenCenterX = window.innerWidth / 2;
             const screenCenterY = window.innerHeight / 2;
             const cameraX =
-                screenCenterX - myTank.x - CONSTANTS.PLAYER_SIZE / 2;
+                screenCenterX - myTank.x - CONSTANTS.PLAYER_WIDTH / 2;
             const cameraY =
-                screenCenterY - myTank.y - CONSTANTS.PLAYER_SIZE / 2;
+                screenCenterY - myTank.y - CONSTANTS.PLAYER_HEIGHT / 2;
 
             this.arena.style.transform = `translate3d(${cameraX}px, ${cameraY}px, 0)`;
         }

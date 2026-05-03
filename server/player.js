@@ -48,33 +48,40 @@ class Player {
         if (this.hasSpeed) currentSpeed *= CONSTANTS.SPEED_MULTIPLIER;
         const frameSpeed = currentSpeed * dt;
 
-        const isColliding = () => {
-            return obstacles.some(
-                (obs) =>
-                    this.x < obs.x + obs.w &&
-                    this.x + CONSTANTS.PLAYER_WIDTH > obs.x &&
-                    this.y < obs.y + obs.h &&
-                    this.y + CONSTANTS.PLAYER_HEIGHT > obs.y,
-            );
-        };
+        let moveX = 0;
+        let moveY = 0;
 
-        const speed = CONSTANTS.PLAYER_SPEED * dt;
         if (this.inputs.up) {
-            this.x += Math.cos(this.baseAngle) * frameSpeed;
-            this.y += Math.sin(this.baseAngle) * frameSpeed;
-            if (isColliding()) {
-                this.x -= Math.cos(this.baseAngle) * frameSpeed;
-                this.y -= Math.sin(this.baseAngle) * frameSpeed;
-            }
+            moveX += Math.cos(this.baseAngle) * frameSpeed;
+            moveY += Math.sin(this.baseAngle) * frameSpeed;
+        }
+        if (this.inputs.down) {
+            moveX -= Math.cos(this.baseAngle) * frameSpeed;
+            moveY -= Math.sin(this.baseAngle) * frameSpeed;
         }
 
-        if (this.inputs.down) {
-            this.x -= Math.cos(this.baseAngle) * frameSpeed;
-            this.y -= Math.sin(this.baseAngle) * frameSpeed;
-            if (isColliding()) {
-                this.x += Math.cos(this.baseAngle) * frameSpeed;
-                this.y += Math.sin(this.baseAngle) * frameSpeed;
-            }
+        this.x += moveX;
+        if (
+            game.checkWallCollision(
+                this.x,
+                this.y,
+                CONSTANTS.PLAYER_WIDTH,
+                CONSTANTS.PLAYER_HEIGHT,
+            )
+        ) {
+            this.x -= moveX;
+        }
+
+        this.y += moveY;
+        if (
+            game.checkWallCollision(
+                this.x,
+                this.y,
+                CONSTANTS.PLAYER_WIDTH,
+                CONSTANTS.PLAYER_HEIGHT,
+            )
+        ) {
+            this.y -= moveY;
         }
 
         const centerX = this.x + CONSTANTS.PLAYER_WIDTH / 2;

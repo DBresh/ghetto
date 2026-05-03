@@ -24,14 +24,12 @@ class Projectile {
         );
     }
 
-    hitsPlayer(player) {
-        if (this.ownerId === player.id || player.isStunned) return false;
-
+    hitsPlayer(p) {
         return (
-            this.x > player.x &&
-            this.x < player.x + CONSTANTS.PLAYER_SIZE &&
-            this.y > player.y &&
-            this.y < player.y + CONSTANTS.PLAYER_SIZE
+            this.x > p.x &&
+            this.x < p.x + CONSTANTS.PLAYER_WIDTH &&
+            this.y > p.y &&
+            this.y < p.y + CONSTANTS.PLAYER_HEIGHT
         );
     }
 }

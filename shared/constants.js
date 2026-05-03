@@ -1,7 +1,7 @@
 // shared/constants.js
 const CONSTANTS = {
     WORLD_WIDTH: 2000,
-    WORLD_HEIGHT: 1000,
+    WORLD_HEIGHT: 2000,
 
     PLAYER_WIDTH: 66,
     PLAYER_HEIGHT: 40,
@@ -26,6 +26,20 @@ const CONSTANTS = {
     SPEED_MULTIPLIER: 2.5,
     SHIELD_CHARGES: 2,
     MAX_POWERUPS: 5,
+
+    TILE_SIZE: 40,
+    CLASSIC_MAP: [
+        "....................",
+        "..BB..BB....BB..BB..",
+        "..BB..BB....BB..BB..",
+        "..BB..BB....BB..BB..",
+        "..BB..BB.SS.BB..BB..",
+        "..BB..BB....BB..BB..",
+        "........BBBB........",
+        "..BB..B......B..BB..",
+        "..BB..B..BB..B..BB..",
+        ".........BB.........",
+    ],
 };
 
 if (typeof module !== "undefined" && module.exports) {

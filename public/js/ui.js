@@ -118,9 +118,22 @@ class UIManager {
         });
     }
 
-    setPauseState(isPaused) {
+    setPauseState(isPaused, isOwner = true) {
         STATE.isMenuOpen = isPaused;
         this.menuOverlay.style.display = isPaused ? "flex" : "none";
+
+        const resumeBtn = document.getElementById("btn-resume");
+        if (isPaused) {
+            if (isOwner) {
+                resumeBtn.innerText = "RESUME GAME";
+                resumeBtn.style.opacity = "1";
+                resumeBtn.style.pointerEvents = "auto";
+            } else {
+                resumeBtn.innerText = "WAITING FOR UNPAUSE...";
+                resumeBtn.style.opacity = "0.5";
+                resumeBtn.style.pointerEvents = "none";
+            }
+        }
     }
 
     addChatMessage(color, text) {

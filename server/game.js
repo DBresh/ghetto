@@ -21,6 +21,46 @@ class Game {
         this.timeLeft = CONSTANTS.MATCH_LENGTH;
         this.isGameOver = false;
         this.isPaused = false;
+        this.pausedBy = null;
+
+        this.mapGrid = [];
+        this.buildMap();
+    }
+
+    buildMap() {
+        const blueprint = CONSTANTS.CLASSIC_MAP;
+        for (let r = 0; r < blueprint.length; r++) {
+            this.mapGrid[r] = [];
+            for (let c = 0; c < blueprint[r].length; c++) {
+                this.mapGrid[r][c] = blueprint[r][c];
+            }
+        }
+    }
+
+    checkWallCollision(x, y, width, height) {
+        const startCol = Math.floor(x / CONSTANTS.TILE_SIZE);
+        const endCol = Math.floor((x + width - 0.1) / CONSTANTS.TILE_SIZE);
+        const startRow = Math.floor(y / CONSTANTS.TILE_SIZE);
+        const endRow = Math.floor((y + height - 0.1) / CONSTANTS.TILE_SIZE);
+
+        if (
+            startCol < 0 ||
+            endCol >= this.mapGrid[0].length ||
+            startRow < 0 ||
+            endRow >= this.mapGrid.length
+        ) {
+            return true;
+        }
+
+        for (let r = startRow; r <= endRow; r++) {
+            for (let c = startCol; c <= endCol; c++) {
+                const tile = this.mapGrid[r][c];
+                if (tile === "B" || tile === "S") {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     setupObstacles() {
@@ -32,7 +72,10 @@ class Game {
     }
 
     spawnPowerUp() {
-        const pos = this.getSafePosition(CONSTANTS.POWERUP_SIZE);
+        const pos = this.getSafePosition(
+            CONSTANTS.POWERUP_SIZE,
+            CONSTANTS.POWERUP_SIZE,
+        );
         const types = CONSTANTS.POWERUP_TYPES;
 
         this.powerUps.push({
@@ -53,6 +96,10 @@ class Game {
 
     removePlayer(id) {
         delete this.players[id];
+        if (this.pausedBy === id) {
+            this.isPaused = false;
+            this.pausedBy = null;
+        }
     }
 
     handleInput(id, inputs) {

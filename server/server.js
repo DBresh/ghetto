@@ -53,7 +53,7 @@ io.on("connection", (socket) => {
         socket.emit("map_data", {
             width: CONSTANTS.WORLD_WIDTH,
             height: CONSTANTS.WORLD_HEIGHT,
-            obstacles: game.obstacles,
+            obstacles: game.mapGrid,
         });
 
         console.log(`${playerName} (${socket.id}) joined ${roomId}`);
@@ -82,39 +82,74 @@ io.on("connection", (socket) => {
         console.log(`Socket disconnected: ${socket.id}`);
         if (socket.roomId && activeGames[socket.roomId]) {
             const game = activeGames[socket.roomId];
+
+            const wasPauser = game.pausedBy === socket.id;
+
             game.removePlayer(socket.id);
 
             if (Object.keys(game.players).length === 0) {
                 delete activeGames[socket.roomId];
                 console.log(`Room ${socket.roomId} destroyed.`);
+            } else if (wasPauser) {
+                io.to(socket.roomId).emit("pause_state_changed", {
+                    isPaused: false,
+                    pausedBy: null,
+                });
             }
+
             broadcastLobbyList();
         }
     });
 
     socket.on("action_pause", () => {
-        if (socket.roomId && activeGames[socket.roomId]) {
-            // Only pause if this player actually exists in the game
-            if (activeGames[socket.roomId].players[socket.id]) {
-                activeGames[socket.roomId].isPaused = true;
-                // Broadcast to the whole room that the game is paused
-                io.to(socket.roomId).emit("pause_state_changed", true);
-            }
+        const game = activeGames[socket.roomId];
+        if (game && game.players[socket.id]) {
+            game.isPaused = true;
+            game.pausedBy = socket.id;
+            io.to(socket.roomId).emit("pause_state_changed", {
+                isPaused: true,
+                pausedBy: socket.id,
+            });
         }
     });
 
     socket.on("action_resume", () => {
-        if (socket.roomId && activeGames[socket.roomId]) {
-            activeGames[socket.roomId].isPaused = false;
-            io.to(socket.roomId).emit("pause_state_changed", false);
+        const game = activeGames[socket.roomId];
+        if (
+            game &&
+            (game.pausedBy === socket.id || !game.players[game.pausedBy])
+        ) {
+            game.isPaused = false;
+            game.pausedBy = null;
+            io.to(socket.roomId).emit("pause_state_changed", {
+                isPaused: false,
+                pausedBy: null,
+            });
         }
     });
 
     socket.on("action_quit", () => {
         if (socket.roomId && activeGames[socket.roomId]) {
-            activeGames[socket.roomId].removePlayer(socket.id);
+            const game = activeGames[socket.roomId];
+
+            const wasPauser = game.pausedBy === socket.id;
+
+            game.removePlayer(socket.id);
             socket.leave(socket.roomId);
+
+            if (Object.keys(game.players).length === 0) {
+                delete activeGames[socket.roomId];
+                console.log(`Room ${socket.roomId} destroyed.`);
+            } else if (wasPauser) {
+                io.to(socket.roomId).emit("pause_state_changed", {
+                    isPaused: false,
+                    pausedBy: null,
+                });
+            }
+
             socket.roomId = null;
+            socket.emit("left_lobby");
+            broadcastLobbyList();
         }
     });
 });

@@ -17,9 +17,10 @@ socket.on("state_update", (state) => {
     STATE.serverState = state;
 });
 
-socket.on("pause_state_changed", (isPaused) => {
-    STATE.isMenuOpen = isPaused;
-    UI.setPauseState(isPaused);
+socket.on("pause_state_changed", (data) => {
+    STATE.isMenuOpen = data.isPaused;
+    const isOwner = data.pausedBy === socket.id;
+    UI.setPauseState(data.isPaused, isOwner);
 });
 
 socket.on("server_message", (msg) => {
@@ -37,6 +38,10 @@ socket.on("chat_message", (data) => {
 
 socket.on("kill_event", (data) => {
     UI.addKillFeedItem(data);
+});
+
+socket.on("left_lobby", () => {
+    window.location.reload();
 });
 
 setInterval(() => {

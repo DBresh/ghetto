@@ -24,7 +24,15 @@ class InputController {
             this.rawMouseY = e.clientY;
         });
 
-        window.addEventListener("mousedown", () => {
+        window.addEventListener("mousedown", (e) => {
+            if (typeof STATE !== "undefined" && STATE.isMenuOpen) return;
+
+            if (
+                e.target.closest("#chat-container") ||
+                e.target.closest("#lobby-screen")
+            )
+                return;
+
             const myTank =
                 typeof socket !== "undefined"
                     ? STATE.serverState.players[socket.id]
