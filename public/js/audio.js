@@ -6,7 +6,7 @@ class AudioEngine {
             stun: new Audio("/sounds/stun.mp3"),
         };
 
-        Object.values(this.sounds).forEach((audio) => (audio.volume = 0.1));
+        Object.values(this.sounds).forEach((audio) => (audio.volume = 0.02));
     }
 
     play(soundName) {
