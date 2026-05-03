@@ -52,9 +52,9 @@ class Player {
             return obstacles.some(
                 (obs) =>
                     this.x < obs.x + obs.w &&
-                    this.x + CONSTANTS.PLAYER_SIZE > obs.x &&
+                    this.x + CONSTANTS.PLAYER_WIDTH > obs.x &&
                     this.y < obs.y + obs.h &&
-                    this.y + CONSTANTS.PLAYER_SIZE > obs.y,
+                    this.y + CONSTANTS.PLAYER_HEIGHT > obs.y,
             );
         };
 
@@ -77,8 +77,8 @@ class Player {
             }
         }
 
-        const centerX = this.x + CONSTANTS.PLAYER_SIZE / 2;
-        const centerY = this.y + CONSTANTS.PLAYER_SIZE / 2;
+        const centerX = this.x + CONSTANTS.PLAYER_WIDTH / 2;
+        const centerY = this.y + CONSTANTS.PLAYER_HEIGHT / 2;
         this.turretAngle = Math.atan2(
             this.inputs.mouseY - centerY,
             this.inputs.mouseX - centerX,
@@ -86,11 +86,11 @@ class Player {
 
         this.x = Math.max(
             0,
-            Math.min(this.x, CONSTANTS.WORLD_WIDTH - CONSTANTS.PLAYER_SIZE),
+            Math.min(this.x, CONSTANTS.WORLD_WIDTH - CONSTANTS.PLAYER_WIDTH),
         );
         this.y = Math.max(
             0,
-            Math.min(this.y, CONSTANTS.WORLD_HEIGHT - CONSTANTS.PLAYER_SIZE),
+            Math.min(this.y, CONSTANTS.WORLD_HEIGHT - CONSTANTS.PLAYER_HEIGHT),
         );
     }
 

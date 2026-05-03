@@ -18,6 +18,7 @@ socket.on("state_update", (state) => {
 });
 
 socket.on("pause_state_changed", (isPaused) => {
+    STATE.isMenuOpen = isPaused;
     UI.setPauseState(isPaused);
 });
 

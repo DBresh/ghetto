@@ -3,7 +3,8 @@ const CONSTANTS = {
     WORLD_WIDTH: 2000,
     WORLD_HEIGHT: 1000,
 
-    PLAYER_SIZE: 40,
+    PLAYER_WIDTH: 66,
+    PLAYER_HEIGHT: 40,
     PLAYER_SPEED: 300,
     TANK_ROTATION_SPEED: 3.5, // Radians per second
 

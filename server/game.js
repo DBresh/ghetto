@@ -44,7 +44,10 @@ class Game {
     }
 
     addPlayer(id, name) {
-        const pos = this.getSafePosition(CONSTANTS.PLAYER_SIZE);
+        const pos = this.getSafePosition(
+            CONSTANTS.PLAYER_WIDTH,
+            CONSTANTS.PLAYER_HEIGHT,
+        );
         this.players[id] = new Player(id, pos.x, pos.y, name);
     }
 
@@ -76,21 +79,21 @@ class Game {
         if (this.timeLeft === 0) this.isGameOver = true;
     }
 
-    getSafePosition(entitySize) {
+    getSafePosition(entityWidth, entityHeight) {
         let x, y, isSafe;
         let attempts = 0;
 
         do {
-            x = Math.random() * (CONSTANTS.WORLD_WIDTH - entitySize);
-            y = Math.random() * (CONSTANTS.WORLD_HEIGHT - entitySize);
+            x = Math.random() * (CONSTANTS.WORLD_WIDTH - entityWidth);
+            y = Math.random() * (CONSTANTS.WORLD_HEIGHT - entityHeight);
             isSafe = true;
 
             for (const obs of this.obstacles) {
                 if (
                     x < obs.x + obs.w &&
-                    x + entitySize > obs.x &&
+                    x + entityWidth > obs.x &&
                     y < obs.y + obs.h &&
-                    y + entitySize > obs.y
+                    y + entityHeight > obs.y
                 ) {
                     isSafe = false;
                     break;
@@ -111,9 +114,9 @@ class Game {
                 const pu = this.powerUps[i];
                 if (
                     p.x < pu.x + CONSTANTS.POWERUP_SIZE &&
-                    p.x + CONSTANTS.PLAYER_SIZE > pu.x &&
+                    p.x + CONSTANTS.PLAYER_WIDTH > pu.x &&
                     p.y < pu.y + CONSTANTS.POWERUP_SIZE &&
-                    p.y + CONSTANTS.PLAYER_SIZE > pu.y
+                    p.y + CONSTANTS.PLAYER_HEIGHT > pu.y
                 ) {
                     switch (pu.type) {
                         case "RELIC":
@@ -141,8 +144,8 @@ class Game {
 
             if (p.canShoot(now)) {
                 p.lastShotTime = now;
-                const pCX = p.x + CONSTANTS.PLAYER_SIZE / 2;
-                const pCY = p.y + CONSTANTS.PLAYER_SIZE / 2;
+                const pCX = p.x + CONSTANTS.PLAYER_WIDTH / 2;
+                const pCY = p.y + CONSTANTS.PLAYER_HEIGHT / 2;
 
                 if (p.hasDoubleBarrel) {
                     const offset = 10;
@@ -229,7 +232,8 @@ class Game {
                         }
 
                         const safePos = this.getSafePosition(
-                            CONSTANTS.PLAYER_SIZE,
+                            CONSTANTS.PLAYER_WIDTH,
+                            CONSTANTS.PLAYER_HEIGHT,
                         );
                         target.respawn(safePos.x, safePos.y);
                     }

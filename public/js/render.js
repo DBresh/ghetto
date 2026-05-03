@@ -108,8 +108,8 @@ class GameRenderer {
             if (!STATE.playerElements[id]) {
                 const el = document.createElement("div");
                 el.classList.add("entity", "player-wrapper");
-                el.style.width = `${CONSTANTS.PLAYER_SIZE}px`;
-                el.style.height = `${CONSTANTS.PLAYER_SIZE}px`;
+                el.style.width = `${CONSTANTS.PLAYER_WIDTH}px`;
+                el.style.height = `${CONSTANTS.PLAYER_HEIGHT}px`;
 
                 const nameTag = document.createElement("div");
                 nameTag.innerText = p.name;

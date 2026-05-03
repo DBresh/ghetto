@@ -91,6 +91,32 @@ io.on("connection", (socket) => {
             broadcastLobbyList();
         }
     });
+
+    socket.on("action_pause", () => {
+        if (socket.roomId && activeGames[socket.roomId]) {
+            // Only pause if this player actually exists in the game
+            if (activeGames[socket.roomId].players[socket.id]) {
+                activeGames[socket.roomId].isPaused = true;
+                // Broadcast to the whole room that the game is paused
+                io.to(socket.roomId).emit("pause_state_changed", true);
+            }
+        }
+    });
+
+    socket.on("action_resume", () => {
+        if (socket.roomId && activeGames[socket.roomId]) {
+            activeGames[socket.roomId].isPaused = false;
+            io.to(socket.roomId).emit("pause_state_changed", false);
+        }
+    });
+
+    socket.on("action_quit", () => {
+        if (socket.roomId && activeGames[socket.roomId]) {
+            activeGames[socket.roomId].removePlayer(socket.id);
+            socket.leave(socket.roomId);
+            socket.roomId = null;
+        }
+    });
 });
 
 setInterval(() => {
