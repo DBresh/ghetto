@@ -35,7 +35,7 @@ socket.on("chat_message", (data) => {
 });
 
 socket.on("kill_event", (data) => {
-    UI.addKillFeedItem(data.killerColor, data.victimColor);
+    UI.addKillFeedItem(data);
 });
 
 setInterval(() => {

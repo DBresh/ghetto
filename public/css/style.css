@@ -254,7 +254,7 @@ html {
 #kill-feed {
     position: fixed;
     top: 20px;
-    right: 150px;
+    right: 250px;
     display: flex;
     flex-direction: column;
     align-items: flex-end;

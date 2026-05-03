@@ -8,20 +8,49 @@ class UIManager {
         this.lobbyList = document.getElementById("lobby-list");
         this.btnCreate = document.getElementById("btn-create-lobby");
         this.logTimeout = null;
+        this.nameInput = document.getElementById("player-name-input");
 
         this.initMenuListeners();
         this.initLobbyListeners();
     }
 
+    getPlayerName() {
+        let name = this.nameInput.value.trim();
+        if (!name) {
+            const adjs = [
+                "Angry",
+                "Sneaky",
+                "Derpy",
+                "Sweaty",
+                "Chonky",
+                "Spicy",
+                "Ghostly",
+                "Tactical",
+            ];
+            const nouns = [
+                "Potato",
+                "Goblin",
+                "Toaster",
+                "Ninja",
+                "Pancake",
+                "Waffle",
+                "Banana",
+                "Hamster",
+            ];
+            name = `${adjs[Math.floor(Math.random() * adjs.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]}`;
+            this.nameInput.value = name;
+        }
+        return name;
+    }
+
     initLobbyListeners() {
         this.btnCreate.addEventListener("click", () => {
-            socket.emit("create_lobby");
+            socket.emit("create_lobby", { name: this.getPlayerName() });
         });
     }
 
     renderLobbyList(lobbies) {
         this.lobbyList.innerHTML = "";
-
         if (lobbies.length === 0) {
             this.lobbyList.innerHTML =
                 '<div style="text-align:center; color:#777;">No active matches. Create one!</div>';
@@ -36,7 +65,7 @@ class UIManager {
                     <strong>Match: ${lobby.id}</strong><br>
                     <span style="color:#aaa; font-size: 12px;">Players: ${lobby.players}</span>
                 </div>
-                <button class="btn-join" onclick="socket.emit('join_lobby', '${lobby.id}')">JOIN</button>
+                <button class="btn-join" onclick="socket.emit('join_lobby', { roomId: '${lobby.id}', name: UI.getPlayerName() })">JOIN</button>
             `;
             this.lobbyList.appendChild(el);
         });
@@ -106,13 +135,11 @@ class UIManager {
         this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
     }
 
-    addKillFeedItem(killerColor, victimColor) {
+    addKillFeedItem(ev) {
         const el = document.createElement("div");
         el.className = "kill-feed-item";
-        el.innerHTML = `<span style="color: ${killerColor}">Tank</span> ➤ <span style="color: ${victimColor}">Tank</span>`;
-
+        el.innerHTML = `<span style="color: ${ev.killerColor}">${ev.killerName}</span> ➤ <span style="color: ${ev.victimColor}">${ev.victimName}</span>`;
         this.killFeed.appendChild(el);
-
         setTimeout(() => el.remove(), 5500);
     }
 

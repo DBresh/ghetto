@@ -71,7 +71,7 @@ class GameRenderer {
                 typeof socket !== "undefined" && p.id === socket.id
                     ? " (You)"
                     : "";
-            scoreHTML += `<span style="color: ${p.color}">Player ${index + 1}${isMe}: ${p.score}</span><br>`;
+            scoreHTML += `<span style="color: ${p.color}">${index + 1}. ${p.name}${isMe}: ${p.score}</span><br>`;
         });
         this.scoreboardEl.innerHTML = scoreHTML;
 
@@ -111,6 +111,18 @@ class GameRenderer {
                 el.style.width = `${CONSTANTS.PLAYER_SIZE}px`;
                 el.style.height = `${CONSTANTS.PLAYER_SIZE}px`;
 
+                const nameTag = document.createElement("div");
+                nameTag.innerText = p.name;
+                nameTag.style.position = "absolute";
+                nameTag.style.top = "-25px";
+                nameTag.style.left = "50%";
+                nameTag.style.transform = "translateX(-50%)";
+                nameTag.style.color = p.color;
+                nameTag.style.fontSize = "14px";
+                nameTag.style.fontWeight = "bold";
+                nameTag.style.whiteSpace = "nowrap";
+                nameTag.style.textShadow = "1px 1px 3px black";
+
                 const base = document.createElement("div");
                 base.classList.add("tank-base");
                 base.style.backgroundColor = p.color;
@@ -129,8 +141,10 @@ class GameRenderer {
                 turret.appendChild(bCenter);
                 turret.appendChild(bLeft);
                 turret.appendChild(bRight);
+
                 el.appendChild(base);
                 el.appendChild(turret);
+                el.appendChild(nameTag);
 
                 this.arena.appendChild(el);
                 STATE.playerElements[id] = {

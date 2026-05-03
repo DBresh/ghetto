@@ -43,9 +43,9 @@ class Game {
         });
     }
 
-    addPlayer(id) {
+    addPlayer(id, name) {
         const pos = this.getSafePosition(CONSTANTS.PLAYER_SIZE);
-        this.players[id] = new Player(id, pos.x, pos.y);
+        this.players[id] = new Player(id, pos.x, pos.y, name);
     }
 
     removePlayer(id) {
@@ -210,6 +210,8 @@ class Game {
             }
 
             for (const targetId in this.players) {
+                if (targetId === b.ownerId) continue;
+
                 const target = this.players[targetId];
                 if (b.hitsPlayer(target)) {
                     const wasKilled = target.takeDamage(
@@ -220,7 +222,9 @@ class Game {
                             this.players[b.ownerId].score += 1;
                             this.events.push({
                                 killerColor: this.players[b.ownerId].color,
+                                killerName: this.players[b.ownerId].name,
                                 victimColor: target.color,
+                                victimName: target.name,
                             });
                         }
 

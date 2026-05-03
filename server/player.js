@@ -1,12 +1,12 @@
 const CONSTANTS = require("../shared/constants");
 
 class Player {
-    constructor(id) {
+    constructor(id, startX, startY, name) {
         this.id = id;
-        this.x =
-            Math.random() * (CONSTANTS.WORLD_WIDTH - CONSTANTS.PLAYER_SIZE);
-        this.y =
-            Math.random() * (CONSTANTS.WORLD_HEIGHT - CONSTANTS.PLAYER_SIZE);
+        this.x = startX;
+        this.y = startY;
+
+        this.name = name || "Unknown Tank";
         this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
         this.score = 0;
         this.isStunned = false;

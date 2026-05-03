@@ -27,27 +27,27 @@ io.on("connection", (socket) => {
 
     broadcastLobbyList();
 
-    socket.on("create_lobby", () => {
+    socket.on("create_lobby", (data) => {
         const roomId =
             "ROOM_" + Math.random().toString(36).substring(2, 8).toUpperCase();
         activeGames[roomId] = new Game();
-        joinRoom(socket, roomId);
+        joinRoom(socket, roomId, data.name);
         broadcastLobbyList();
     });
 
-    socket.on("join_lobby", (roomId) => {
-        if (activeGames[roomId]) {
-            joinRoom(socket, roomId);
+    socket.on("join_lobby", (data) => {
+        if (activeGames[data.roomId]) {
+            joinRoom(socket, data.roomId, data.name);
             broadcastLobbyList();
         }
     });
 
-    function joinRoom(socket, roomId) {
+    function joinRoom(socket, roomId, playerName) {
         socket.roomId = roomId;
         socket.join(roomId);
 
         const game = activeGames[roomId];
-        game.addPlayer(socket.id);
+        game.addPlayer(socket.id, playerName);
 
         socket.emit("joined_lobby", roomId);
         socket.emit("map_data", {
@@ -56,7 +56,7 @@ io.on("connection", (socket) => {
             obstacles: game.obstacles,
         });
 
-        console.log(`${socket.id} joined ${roomId}`);
+        console.log(`${playerName} (${socket.id}) joined ${roomId}`);
     }
 
     socket.on("player_input", (inputs) => {
