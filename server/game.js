@@ -11,8 +11,6 @@ class Game {
         this.bullets = [];
         this.bulletIdCounter = 0;
         this.lastUpdateTime = Date.now();
-        this.obstacles = [];
-        this.setupObstacles();
         this.events = [];
 
         this.powerUps = [];
@@ -56,14 +54,6 @@ class Game {
             }
         }
         return false;
-    }
-
-    setupObstacles() {
-        this.obstacles = [
-            { id: "obs_1", x: 1300, y: 600, w: 400, h: 300, color: "#444" },
-            { id: "obs_2", x: 400, y: 200, w: 100, h: 800, color: "#444" },
-            { id: "obs_3", x: 2500, y: 500, w: 100, h: 800, color: "#444" },
-        ];
     }
 
     spawnPowerUp() {

@@ -23,7 +23,8 @@ class GameRenderer {
     }
 
     buildObstacles(mapGrid) {
-        this.arena.innerHTML = ""; // Clear existing map
+        // this.arena.innerHTML = "";
+        // this.initBulletPool();
 
         for (let r = 0; r < mapGrid.length; r++) {
             for (let c = 0; c < mapGrid[r].length; c++) {
@@ -65,38 +66,25 @@ class GameRenderer {
         if (STATE.serverState.timeLeft !== undefined) {
             const m = Math.floor(STATE.serverState.timeLeft / 60);
             const s = STATE.serverState.timeLeft % 60;
-            this.timerEl.innerText = STATE.serverState.isGameOver
-                ? "GAME OVER"
-                : `${m}:${s < 10 ? "0" : ""}${s}`;
+            this.timerEl.innerText = STATE.serverState.isGameOver ? "GAME OVER" : `${m}:${s < 10 ? "0" : ""}${s}`;
         }
 
         let scoreHTML = "<strong>Scores:</strong><br>";
-        const sortedPlayers = Object.values(
-            STATE.serverState.players || {},
-        ).sort((a, b) => b.score - a.score);
+        const sortedPlayers = Object.values(STATE.serverState.players || {}).sort((a, b) => b.score - a.score);
         sortedPlayers.forEach((p, index) => {
-            const isMe =
-                typeof socket !== "undefined" && p.id === socket.id
-                    ? " (You)"
-                    : "";
+            const isMe = typeof socket !== "undefined" && p.id === socket.id ? " (You)" : "";
             scoreHTML += `<span style="color: ${p.color}">${index + 1}. ${p.name}${isMe}: ${p.score}</span><br>`;
         });
         this.scoreboardEl.innerHTML = scoreHTML;
 
-        if (
-            typeof socket !== "undefined" &&
-            STATE.serverState.players[socket.id]
-        ) {
+        if (typeof socket !== "undefined" && STATE.serverState.players[socket.id]) {
             const myTank = STATE.serverState.players[socket.id];
 
             const hpPercent = Math.max(0, myTank.hp / CONSTANTS.MAX_HP);
             this.hpBar.style.transform = `scaleX(${hpPercent})`;
 
             const timeSinceShot = Date.now() - STATE.lastShotTime;
-            let reloadPercent = Math.min(
-                1,
-                timeSinceShot / CONSTANTS.FIRE_COOLDOWN,
-            );
+            let reloadPercent = Math.min(1, timeSinceShot / CONSTANTS.FIRE_COOLDOWN);
             this.reloadBar.style.transform = `scaleX(${reloadPercent})`;
         }
     }
@@ -105,10 +93,7 @@ class GameRenderer {
         for (const id in STATE.serverState.players) {
             const p = STATE.serverState.players[id];
 
-            if (
-                this.previousScores[id] !== undefined &&
-                p.score > this.previousScores[id]
-            ) {
+            if (this.previousScores[id] !== undefined && p.score > this.previousScores[id]) {
                 if (typeof AUDIO !== "undefined") AUDIO.play("score");
             }
             this.previousScores[id] = p.score;
@@ -208,8 +193,7 @@ class GameRenderer {
                 domBullet.style.display = "block";
                 domBullet.style.transform = `translate3d(${serverBullet.x}px, ${serverBullet.y}px, 0)`;
             } else {
-                if (domBullet.style.display !== "none")
-                    domBullet.style.display = "none";
+                if (domBullet.style.display !== "none") domBullet.style.display = "none";
             }
         }
     }
@@ -231,16 +215,14 @@ class GameRenderer {
 
                 if (pu.type === "RELIC") el.style.backgroundColor = "gold";
                 if (pu.type === "SPEED") el.style.backgroundColor = "blue";
-                if (pu.type === "DOUBLE_BARREL")
-                    el.style.backgroundColor = "red";
+                if (pu.type === "DOUBLE_BARREL") el.style.backgroundColor = "red";
                 if (pu.type === "SHIELD") el.style.backgroundColor = "cyan";
 
                 this.arena.appendChild(el);
                 this.domPowerUps[pu.id] = el;
             }
 
-            this.domPowerUps[pu.id].style.transform =
-                `translate3d(${pu.x}px, ${pu.y}px, 0)`;
+            this.domPowerUps[pu.id].style.transform = `translate3d(${pu.x}px, ${pu.y}px, 0)`;
         });
 
         for (const domId in this.domPowerUps) {
@@ -252,17 +234,12 @@ class GameRenderer {
     }
 
     updateCamera() {
-        if (
-            typeof socket !== "undefined" &&
-            STATE.serverState.players[socket.id]
-        ) {
+        if (typeof socket !== "undefined" && STATE.serverState.players[socket.id]) {
             const myTank = STATE.serverState.players[socket.id];
             const screenCenterX = window.innerWidth / 2;
             const screenCenterY = window.innerHeight / 2;
-            const cameraX =
-                screenCenterX - myTank.x - CONSTANTS.PLAYER_WIDTH / 2;
-            const cameraY =
-                screenCenterY - myTank.y - CONSTANTS.PLAYER_HEIGHT / 2;
+            const cameraX = screenCenterX - myTank.x - CONSTANTS.PLAYER_WIDTH / 2;
+            const cameraY = screenCenterY - myTank.y - CONSTANTS.PLAYER_HEIGHT / 2;
 
             this.arena.style.transform = `translate3d(${cameraX}px, ${cameraY}px, 0)`;
         }

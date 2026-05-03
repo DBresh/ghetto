@@ -24,19 +24,8 @@ class InputController {
             this.rawMouseY = e.clientY;
         });
 
-        window.addEventListener("mousedown", (e) => {
-            if (typeof STATE !== "undefined" && STATE.isMenuOpen) return;
-
-            if (
-                e.target.closest("#chat-container") ||
-                e.target.closest("#lobby-screen")
-            )
-                return;
-
-            const myTank =
-                typeof socket !== "undefined"
-                    ? STATE.serverState.players[socket.id]
-                    : null;
+        window.addEventListener("mousedown", () => {
+            const myTank = typeof socket !== "undefined" ? STATE.serverState.players[socket.id] : null;
             if (myTank && myTank.hp <= 0) return;
 
             const now = Date.now();
@@ -51,19 +40,14 @@ class InputController {
     }
 
     setKey(code, isPressed) {
-        if (
-            document.activeElement &&
-            document.activeElement.id === "chat-input" &&
-            isPressed
-        ) {
+        if (document.activeElement && document.activeElement.id === "chat-input" && isPressed) {
             return;
         }
 
         if (code === "KeyW" || code === "ArrowUp") this.keys.up = isPressed;
         if (code === "KeyS" || code === "ArrowDown") this.keys.down = isPressed;
         if (code === "KeyA" || code === "ArrowLeft") this.keys.left = isPressed;
-        if (code === "KeyD" || code === "ArrowRight")
-            this.keys.right = isPressed;
+        if (code === "KeyD" || code === "ArrowRight") this.keys.right = isPressed;
     }
 
     resetKeys() {
