@@ -1,6 +1,7 @@
 const CONSTANTS = require("../shared/constants");
 const Player = require("./player");
 const Projectile = require("./projectile");
+const NPC = require("./npc");
 
 class Game {
     constructor() {
@@ -23,6 +24,8 @@ class Game {
         this.isGameOver = false;
         this.isPaused = false;
         this.pausedBy = null;
+
+        this.botIdCounter = 0;
     }
 
     buildMap() {
@@ -71,6 +74,7 @@ class Game {
     addPlayer(id, name) {
         const pos = this.getSafePosition(CONSTANTS.PLAYER_WIDTH, CONSTANTS.PLAYER_HEIGHT);
         this.players[id] = new Player(id, pos.x, pos.y, name);
+        this.manageBots();
     }
 
     removePlayer(id) {
@@ -78,6 +82,28 @@ class Game {
         if (this.pausedBy === id) {
             this.isPaused = false;
             this.pausedBy = null;
+        }
+        this.manageBots();
+    }
+
+    manageBots() {
+        const realPlayerIds = Object.keys(this.players).filter((id) => !id.startsWith("BOT_"));
+        const currentBotIds = Object.keys(this.players).filter((id) => id.startsWith("BOT_"));
+
+        const desiredBotCount = Math.max(0, 4 - realPlayerIds.length);
+
+        while (currentBotIds.length < desiredBotCount) {
+            this.botIdCounter++;
+            const botId = "BOT_" + this.botIdCounter;
+            const pos = this.getSafePosition(CONSTANTS.PLAYER_WIDTH, CONSTANTS.PLAYER_HEIGHT);
+
+            this.players[botId] = new NPC(botId, pos.x, pos.y);
+            currentBotIds.push(botId);
+        }
+
+        while (currentBotIds.length > desiredBotCount) {
+            const botToRemove = currentBotIds.pop();
+            delete this.players[botToRemove];
         }
     }
 
@@ -156,7 +182,11 @@ class Game {
     updatePlayers(dt, now) {
         for (const id in this.players) {
             const p = this.players[id];
-            p.update(dt, this, now);
+            if (typeof p.updateAI === "function") {
+                p.updateAI(dt, this, now);
+            } else {
+                p.update(dt, this, now);
+            }
 
             for (let i = this.powerUps.length - 1; i >= 0; i--) {
                 const pu = this.powerUps[i];

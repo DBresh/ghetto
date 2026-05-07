@@ -15,10 +15,15 @@ app.use("/shared", express.static(path.join(__dirname, "../shared")));
 const activeGames = {};
 
 function broadcastLobbyList() {
-    const lobbies = Object.keys(activeGames).map((roomId) => ({
-        id: roomId,
-        players: Object.keys(activeGames[roomId].players).length,
-    }));
+    const lobbies = Object.keys(activeGames).map((roomId) => {
+        const game = activeGames[roomId];
+        const realPlayers = Object.keys(game.players).filter((id) => !id.startsWith("BOT_")).length;
+
+        return {
+            id: roomId,
+            players: realPlayers,
+        };
+    });
     io.emit("lobby_list_update", lobbies);
 }
 
@@ -98,8 +103,8 @@ io.on("connection", (socket) => {
             const wasPauser = game.pausedBy === socket.id;
 
             game.removePlayer(socket.id);
-
-            if (Object.keys(game.players).length === 0) {
+            const realPlayers = Object.keys(game.players).filter((id) => !id.startsWith("BOT_"));
+            if (realPlayers.length === 0) {
                 delete activeGames[socket.roomId];
                 console.log(`Room ${socket.roomId} destroyed.`);
             } else if (wasPauser) {
@@ -146,7 +151,8 @@ io.on("connection", (socket) => {
             game.removePlayer(socket.id);
             socket.leave(socket.roomId);
 
-            if (Object.keys(game.players).length === 0) {
+            const realPlayers = Object.keys(game.players).filter((id) => !id.startsWith("BOT_"));
+            if (realPlayers.length === 0) {
                 delete activeGames[socket.roomId];
                 console.log(`Room ${socket.roomId} destroyed.`);
             } else if (wasPauser) {
