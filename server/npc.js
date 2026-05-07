@@ -4,6 +4,7 @@ const CONSTANTS = require("../shared/constants");
 class NPC extends Player {
     constructor(id, startX, startY) {
         super(id, startX, startY, "Bot-" + Math.floor(Math.random() * 999));
+        this.visionRange = 1000;
 
         this.state = "WANDER";
         this.targetId = null;
@@ -19,9 +20,17 @@ class NPC extends Player {
 
         this.clickToggle = false;
         this._juke = 1;
+        this.jukeTimer = 0;
 
         this.combatStrafeDir = Math.random() > 0.5 ? 1 : -1;
         this.combatStrafeTimer = 0;
+
+        this.inputs.mouseX = startX + 100;
+        this.inputs.mouseY = startY;
+
+        this.avoidanceTimer = 0;
+        this.avoidanceAngle = 0;
+        this.avoidanceDrive = 1;
     }
 
     hasLineOfSight(game, targetX, targetY) {
@@ -49,6 +58,7 @@ class NPC extends Player {
         let perception = {
             nearestEnemy: null,
             nearestEnemyDist: Infinity,
+            enemyHasLoS: false,
             nearestPowerUp: null,
             nearestPowerUpDist: Infinity,
         };
@@ -65,10 +75,11 @@ class NPC extends Player {
             const pCY = p.y + CONSTANTS.PLAYER_HEIGHT / 2;
             const dist = Math.hypot(pCX - myCX, pCY - myCY);
 
-            if (dist < this.visionRange && this.hasLineOfSight(game, pCX, pCY)) {
+            if (dist < this.visionRange) {
                 if (dist < perception.nearestEnemyDist) {
                     perception.nearestEnemyDist = dist;
                     perception.nearestEnemy = p;
+                    perception.enemyHasLoS = this.hasLineOfSight(game, pCX, pCY);
                 }
             }
         }
@@ -79,7 +90,7 @@ class NPC extends Player {
             const puCY = pu.y + CONSTANTS.POWERUP_SIZE / 2;
             const dist = Math.hypot(puCX - myCX, puCY - myCY);
 
-            if (dist < 800 && this.hasLineOfSight(game, puCX, puCY)) {
+            if (dist < 1200) {
                 if (dist < perception.nearestPowerUpDist) {
                     perception.nearestPowerUpDist = dist;
                     perception.nearestPowerUp = pu;
@@ -88,52 +99,6 @@ class NPC extends Player {
         }
 
         return perception;
-    }
-
-    decide(perception, now, game) {
-        const { nearestEnemy, nearestEnemyDist, nearestPowerUp } = perception;
-        const myCX = this.x + CONSTANTS.PLAYER_WIDTH / 2;
-        const myCY = this.y + CONSTANTS.PLAYER_HEIGHT / 2;
-
-        let decision;
-
-        if (nearestEnemy && this.hp <= 34 && nearestEnemyDist < 300) {
-            decision = this.handleFlee(nearestEnemy, myCX, myCY);
-        } else if (nearestEnemy) {
-            // Pass 'now' to handleAttack for the timer!
-            decision = this.handleAttack(nearestEnemy, nearestEnemyDist, myCX, myCY, now);
-        } else if (nearestPowerUp) {
-            decision = this.handlePursueRelic(nearestPowerUp, myCX, myCY);
-        } else {
-            decision = this.handleWander(now, myCX, myCY);
-        }
-
-        // TRUE OBSTACLE AVOIDANCE (Whiskers)
-        if (decision.drive !== 0) {
-            const moveAngle = decision.drive === 1 ? decision.targetAngle : decision.targetAngle + Math.PI;
-            const lookAhead = 100; // Slightly shorter look ahead
-
-            if (!this.isPathClear(game, myCX, myCY, moveAngle, lookAhead)) {
-                const angleOffsets = [0.5, -0.5, 1.0, -1.0, 1.5, -1.5, 2.0, -2.0];
-                let pathFound = false;
-
-                for (const offset of angleOffsets) {
-                    const testAngle = moveAngle + offset;
-                    if (this.isPathClear(game, myCX, myCY, testAngle, lookAhead)) {
-                        decision.targetAngle = decision.drive === 1 ? testAngle : testAngle - Math.PI;
-                        pathFound = true;
-                        break;
-                    }
-                }
-
-                // PANIC MODE: If completely boxed in, force it into reverse
-                if (!pathFound) {
-                    decision.drive *= -1;
-                }
-            }
-        }
-
-        return decision;
     }
 
     isPathClear(game, startX, startY, angle, distance) {
@@ -148,13 +113,10 @@ class NPC extends Player {
             checkX += dx;
             checkY += dy;
 
-            // 1. Check World Bounds
             if (checkX < 0 || checkX > CONSTANTS.WORLD_WIDTH || checkY < 0 || checkY > CONSTANTS.WORLD_HEIGHT) {
                 return false;
             }
 
-            // 2. Check Grid Walls with a smaller "feeler" radius (15px)
-            // This prevents them from clipping corners and panicking
             const feelerRadius = 15;
             if (
                 game.checkWallCollision(
@@ -170,7 +132,59 @@ class NPC extends Player {
         return true;
     }
 
-    handleFlee(nearestEnemy, myCX, myCY) {
+    decide(perception, now, game) {
+        const { nearestEnemy, nearestEnemyDist, enemyHasLoS, nearestPowerUp } = perception;
+        const myCX = this.x + CONSTANTS.PLAYER_WIDTH / 2;
+        const myCY = this.y + CONSTANTS.PLAYER_HEIGHT / 2;
+
+        let decision;
+
+        if (nearestEnemy && this.hp <= 40 && nearestEnemyDist < 800) {
+            decision = this.handleFlee(nearestEnemy, myCX, myCY, enemyHasLoS);
+        } else if (nearestEnemy) {
+            decision = this.handleAttack(nearestEnemy, nearestEnemyDist, myCX, myCY, now, enemyHasLoS);
+        } else if (nearestPowerUp) {
+            decision = this.handlePursueRelic(nearestPowerUp, myCX, myCY);
+        } else {
+            decision = this.handleWander(now, myCX, myCY);
+        }
+
+        if (decision.drive !== 0) {
+            if (now < this.avoidanceTimer) {
+                decision.targetAngle = this.avoidanceAngle;
+                decision.drive = this.avoidanceDrive;
+            } else {
+                const moveAngle = decision.drive === 1 ? decision.targetAngle : decision.targetAngle + Math.PI;
+                const lookAhead = 100;
+
+                if (!this.isPathClear(game, myCX, myCY, moveAngle, lookAhead)) {
+                    const angleOffsets = [0.5, -0.5, 1.0, -1.0, 1.5, -1.5, 2.0, -2.0];
+                    let pathFound = false;
+
+                    for (const offset of angleOffsets) {
+                        const testAngle = moveAngle + offset;
+                        if (this.isPathClear(game, myCX, myCY, testAngle, lookAhead)) {
+                            decision.targetAngle = decision.drive === 1 ? testAngle : testAngle - Math.PI;
+                            pathFound = true;
+                            break;
+                        }
+                    }
+
+                    if (!pathFound) {
+                        decision.drive *= -1;
+                    }
+
+                    this.avoidanceAngle = decision.targetAngle;
+                    this.avoidanceDrive = decision.drive;
+                    this.avoidanceTimer = now + 250;
+                }
+            }
+        }
+
+        return decision;
+    }
+
+    handleFlee(nearestEnemy, myCX, myCY, enemyHasLoS) {
         this.state = "FLEE";
         const enemyCX = nearestEnemy.x + CONSTANTS.PLAYER_WIDTH / 2;
         const enemyCY = nearestEnemy.y + CONSTANTS.PLAYER_HEIGHT / 2;
@@ -178,32 +192,21 @@ class NPC extends Player {
         this.inputs.mouseX = enemyCX;
         this.inputs.mouseY = enemyCY;
 
-        // Auto-clicker: Spams true/false every single tick so it fires instantly when ready
         this.clickToggle = !this.clickToggle;
-        this.inputs.shooting = this.clickToggle;
+        this.inputs.shooting = enemyHasLoS ? this.clickToggle : false;
 
         const angleToEnemy = Math.atan2(enemyCY - myCY, enemyCX - myCX);
-
-        // Calculate if enemy is in front of or behind us
         let angleDiff = angleToEnemy - this.baseAngle;
         angleDiff = Math.atan2(Math.sin(angleDiff), Math.cos(angleDiff));
 
-        // If the enemy is roughly in front of us, put it in reverse!
-        // (Turning 180 degrees takes too long and we will die)
         if (Math.abs(angleDiff) < Math.PI / 2) {
-            return {
-                targetAngle: angleToEnemy, // Keep facing them
-                drive: -1, // REVERSE
-            };
+            return { targetAngle: angleToEnemy, drive: -1 };
         } else {
-            return {
-                targetAngle: angleToEnemy + Math.PI, // Keep facing away
-                drive: 1, // DRIVE FORWARD
-            };
+            return { targetAngle: angleToEnemy + Math.PI, drive: 1 };
         }
     }
 
-    handleAttack(nearestEnemy, nearestEnemyDist, myCX, myCY, now) {
+    handleAttack(nearestEnemy, nearestEnemyDist, myCX, myCY, now, enemyHasLoS) {
         this.state = "ATTACK";
         const enemyCX = nearestEnemy.x + CONSTANTS.PLAYER_WIDTH / 2;
         const enemyCY = nearestEnemy.y + CONSTANTS.PLAYER_HEIGHT / 2;
@@ -211,11 +214,9 @@ class NPC extends Player {
         this.inputs.mouseX = enemyCX;
         this.inputs.mouseY = enemyCY;
 
-        // Auto-clicker
         this.clickToggle = !this.clickToggle;
-        this.inputs.shooting = this.clickToggle;
+        this.inputs.shooting = enemyHasLoS ? this.clickToggle : false;
 
-        // Change weave direction periodically (every 0.5 to 2 seconds)
         if (now > this.combatStrafeTimer) {
             this.combatStrafeDir *= -1;
             this.combatStrafeTimer = now + 500 + Math.random() * 1500;
@@ -225,23 +226,23 @@ class NPC extends Player {
         let targetAngle;
         let drive = 0;
 
-        if (nearestEnemyDist > 300) {
-            // Far: Drive closer, but zig-zag (offset by ~30 degrees)
+        if (nearestEnemyDist > 300 || !enemyHasLoS) {
             targetAngle = angleToEnemy + 0.5 * this.combatStrafeDir;
             drive = 1;
         } else if (nearestEnemyDist < 150) {
-            // Too close: Back away diagonally (offset by ~30 degrees)
-            // Reversing while angled means they slide backward AND sideways out of your crosshairs!
             targetAngle = angleToEnemy + 0.5 * this.combatStrafeDir;
             drive = -1;
         } else {
-            // Sweet spot: ORBIT the player (offset by ~75 degrees)
             targetAngle = angleToEnemy + 1.3 * this.combatStrafeDir;
 
-            if (Math.random() < 0.03) {
+            if (now > this.jukeTimer) {
                 this._juke = this._juke === 1 ? -1 : 1;
+                this.jukeTimer = now + 400 + Math.random() * 800;
             }
             drive = this._juke;
+
+            if (nearestEnemyDist > 270 && drive === -1) drive = 1;
+            if (nearestEnemyDist < 180 && drive === 1) drive = -1;
         }
 
         return {
@@ -255,12 +256,9 @@ class NPC extends Player {
         const puCX = nearestPowerUp.x + CONSTANTS.POWERUP_SIZE / 2;
         const puCY = nearestPowerUp.y + CONSTANTS.POWERUP_SIZE / 2;
 
-        this.inputs.mouseX = myCX + Math.cos(this.baseAngle) * 100;
-        this.inputs.mouseY = myCY + Math.sin(this.baseAngle) * 100;
-
         return {
             targetAngle: Math.atan2(puCY - myCY, puCX - myCX),
-            drive: 1, // Standardized to use 'drive'
+            drive: 1,
         };
     }
 
@@ -270,15 +268,12 @@ class NPC extends Player {
         if (now > this.nextDecisionTime) {
             this.nextDecisionTime = now + 1000 + Math.random() * 2000;
             this._wanderAngle = this.baseAngle + (Math.random() - 0.5) * Math.PI;
-            this._wanderMove = Math.random() > 0.2; // 80% chance to move
+            this._wanderMove = Math.random() > 0.2;
         }
-
-        this.inputs.mouseX = myCX + Math.cos(this.baseAngle) * 100;
-        this.inputs.mouseY = myCY + Math.sin(this.baseAngle) * 100;
 
         return {
             targetAngle: this._wanderAngle,
-            drive: this._wanderMove ? 1 : 0, // Standardized to use 'drive'
+            drive: this._wanderMove ? 1 : 0,
         };
     }
 
@@ -286,28 +281,22 @@ class NPC extends Player {
         let angleDiff = decision.targetAngle - this.baseAngle;
         angleDiff = Math.atan2(Math.sin(angleDiff), Math.cos(angleDiff));
 
-        // Tank Rotation
         if (angleDiff > 0.1) this.inputs.right = true;
         else if (angleDiff < -0.1) this.inputs.left = true;
 
-        // Tank Acceleration (Forward / Reverse)
         if (decision.drive === 1) {
-            // Only drive forward if we are generally facing the right direction
             if (Math.abs(angleDiff) < 0.8) {
                 this.inputs.up = true;
             }
         } else if (decision.drive === -1) {
-            // Reverse!
             this.inputs.down = true;
         }
 
-        // Anti-Stuck Logic (updated for reverse driving)
+        // Anti-Stuck
         if (now > this.stuckTimer) {
             const movedDist = Math.hypot(this.x - this.lastX, this.y - this.lastY);
-            // If we are trying to move (up or down) but haven't actually moved
             if (movedDist < 5 && (this.inputs.up || this.inputs.down)) {
                 this.nextDecisionTime = now + 1500;
-                // Force a random rotation to get unstuck
                 this._wanderAngle = this.baseAngle + (Math.random() > 0.5 ? 2 : -2);
             }
             this.lastX = this.x;
