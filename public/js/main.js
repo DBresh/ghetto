@@ -14,6 +14,10 @@ socket.on("joined_lobby", (roomId) => {
 });
 
 socket.on("state_update", (state) => {
+    if (state.isGameOver && (!STATE.serverState || !STATE.serverState.isGameOver)) {
+        UI.showGameOver(state.players);
+    }
+
     STATE.serverState = state;
 });
 
@@ -42,6 +46,11 @@ socket.on("kill_event", (data) => {
 
 socket.on("left_lobby", () => {
     window.location.reload();
+});
+
+socket.on("match_restarted", () => {
+    UI.hideGameOver();
+    if (typeof RENDERER !== "undefined") RENDERER.previousScores = {};
 });
 
 setInterval(() => {

@@ -9,6 +9,10 @@ class UIManager {
         this.btnCreate = document.getElementById("btn-create-lobby");
         this.logTimeout = null;
         this.nameInput = document.getElementById("player-name-input");
+        this.gameOverOverlay = document.getElementById("game-over-overlay");
+        this.finalScoreboard = document.getElementById("final-scoreboard");
+        this.btnRestart = document.getElementById("btn-restart-match");
+        this.btnLeave = document.getElementById("btn-leave-match");
 
         this.initMenuListeners();
         this.initLobbyListeners();
@@ -17,26 +21,8 @@ class UIManager {
     getPlayerName() {
         let name = this.nameInput.value.trim();
         if (!name) {
-            const adjs = [
-                "Angry",
-                "Sneaky",
-                "Derpy",
-                "Sweaty",
-                "Chonky",
-                "Spicy",
-                "Ghostly",
-                "Tactical",
-            ];
-            const nouns = [
-                "Potato",
-                "Goblin",
-                "Toaster",
-                "Ninja",
-                "Pancake",
-                "Waffle",
-                "Banana",
-                "Hamster",
-            ];
+            const adjs = ["Angry", "Sneaky", "Derpy", "Sweaty", "Chonky", "Spicy", "Ghostly", "Tactical"];
+            const nouns = ["Potato", "Goblin", "Toaster", "Ninja", "Pancake", "Waffle", "Banana", "Hamster"];
             name = `${adjs[Math.floor(Math.random() * adjs.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]}`;
             this.nameInput.value = name;
         }
@@ -47,6 +33,30 @@ class UIManager {
         this.btnCreate.addEventListener("click", () => {
             socket.emit("create_lobby", { name: this.getPlayerName() });
         });
+
+        this.btnRestart.addEventListener("click", () => {
+            socket.emit("action_restart_match");
+        });
+
+        this.btnLeave.addEventListener("click", () => {
+            socket.emit("action_quit"); // Reuse our existing quit logic!
+            this.gameOverOverlay.style.display = "none";
+        });
+    }
+
+    showGameOver(players) {
+        this.gameOverOverlay.style.display = "flex";
+        let html = "<strong style='color: #00ffcc;'>FINAL SCORES</strong><br><br>";
+
+        const sorted = Object.values(players).sort((a, b) => b.score - a.score);
+        sorted.forEach((p, index) => {
+            html += `<div style="color: ${p.color}; margin: 5px 0;">${index + 1}. ${p.name}: ${p.score}</div>`;
+        });
+        this.finalScoreboard.innerHTML = html;
+    }
+
+    hideGameOver() {
+        this.gameOverOverlay.style.display = "none";
     }
 
     renderLobbyList(lobbies) {
@@ -113,8 +123,7 @@ class UIManager {
 
         document.getElementById("btn-quit").addEventListener("click", () => {
             socket.emit("action_quit");
-            document.body.innerHTML =
-                "<h1 style='text-align:center; margin-top:20vh;'>You left the game.</h1>";
+            document.body.innerHTML = "<h1 style='text-align:center; margin-top:20vh;'>You left the game.</h1>";
         });
     }
 

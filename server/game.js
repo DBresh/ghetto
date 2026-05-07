@@ -86,17 +86,51 @@ class Game {
     }
 
     update() {
-        if (this.isGameOver || this.isPaused) return this.getState();
+        if (this.isPaused || this.isGameOver) {
+            this.lastUpdateTime = Date.now();
+            return this.getState();
+        }
 
         const now = Date.now();
         const dt = (now - this.lastUpdateTime) / 1000;
         this.lastUpdateTime = now;
+
+        this.timeLeft -= dt;
+        if (this.timeLeft <= 0) {
+            this.timeLeft = 0;
+            this.isGameOver = true;
+            return this.getState();
+        }
 
         this.updateTimer(now);
         this.updatePlayers(dt, now);
         this.updateBulletsAndCollisions(dt);
 
         return this.getState();
+    }
+
+    restart() {
+        this.lastUpdateTime = Date.now();
+        this.timeLeft = CONSTANTS.GAME_DURATION || 120;
+
+        this.isGameOver = false;
+        this.isPaused = false;
+        this.pausedBy = null;
+
+        this.bullets = [];
+
+        this.powerUps = [];
+        for (let i = 0; i < CONSTANTS.MAX_POWERUPS; i++) {
+            this.spawnPowerUp();
+        }
+
+        for (const id in this.players) {
+            const p = this.players[id];
+            p.score = 0;
+            if (p.clearBuffs) p.clearBuffs();
+            const safePos = this.getSafePosition(CONSTANTS.PLAYER_WIDTH, CONSTANTS.PLAYER_HEIGHT);
+            p.respawn(safePos.x, safePos.y);
+        }
     }
 
     updateTimer(now) {

@@ -55,12 +55,25 @@ io.on("connection", (socket) => {
             obstacles: game.mapGrid,
         });
 
+        socket.emit("pause_state_changed", {
+            isPaused: game.isPaused,
+            pausedBy: game.pausedBy,
+        });
+
         console.log(`${playerName} (${socket.id}) joined ${roomId}`);
     }
 
     socket.on("player_input", (inputs) => {
         if (socket.roomId && activeGames[socket.roomId]) {
             activeGames[socket.roomId].handleInput(socket.id, inputs);
+        }
+    });
+
+    socket.on("action_restart_match", () => {
+        const game = activeGames[socket.roomId];
+        if (game && game.isGameOver) {
+            game.restart();
+            io.to(socket.roomId).emit("match_restarted");
         }
     });
 

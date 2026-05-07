@@ -23,9 +23,6 @@ class GameRenderer {
     }
 
     buildObstacles(mapGrid) {
-        // this.arena.innerHTML = "";
-        // this.initBulletPool();
-
         for (let r = 0; r < mapGrid.length; r++) {
             for (let c = 0; c < mapGrid[r].length; c++) {
                 const tileType = mapGrid[r][c];
@@ -65,7 +62,8 @@ class GameRenderer {
     renderUI() {
         if (STATE.serverState.timeLeft !== undefined) {
             const m = Math.floor(STATE.serverState.timeLeft / 60);
-            const s = STATE.serverState.timeLeft % 60;
+            const s = Math.floor(STATE.serverState.timeLeft % 60);
+
             this.timerEl.innerText = STATE.serverState.isGameOver ? "GAME OVER" : `${m}:${s < 10 ? "0" : ""}${s}`;
         }
 
