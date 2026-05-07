@@ -1,21 +1,102 @@
 class AudioEngine {
     constructor() {
-        this.sounds = {
-            shoot: new Audio("/sounds/metal-pipe.mp3"),
-            score: new Audio("/sounds/score.mp3"),
-            stun: new Audio("/sounds/stun.mp3"),
+        this.audioCtx = null;
+        this.buffers = {};
+        this.initialized = false;
+
+        const initAudio = async () => {
+            if (this.initialized) return;
+            this.initialized = true;
+
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            await Promise.all([
+                this.loadSound("shoot", "/sounds/shot.mp3"),
+                this.loadSound("score", "/sounds/score.mp3"),
+                this.loadSound("bgm", "/sounds/music.mp3"),
+            ]);
+
+            this.playLoop("bgm", 0.01);
+
+            document.removeEventListener("mousedown", initAudio);
+            document.removeEventListener("keydown", initAudio);
         };
 
-        Object.values(this.sounds).forEach((audio) => (audio.volume = 0.02));
+        document.addEventListener("mousedown", initAudio);
+        document.addEventListener("keydown", initAudio);
+    }
+
+    async loadSound(name, url) {
+        try {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await this.audioCtx.decodeAudioData(arrayBuffer);
+            this.buffers[name] = audioBuffer;
+        } catch (e) {
+            console.warn(`Failed to load audio: ${url}`, e);
+        }
+    }
+
+    play3D(soundName, x, y, listenerX, listenerY, maxVolume = 0.05) {
+        if (!this.initialized || !this.buffers[soundName]) return;
+        if (this.audioCtx.state === "suspended") this.audioCtx.resume();
+
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = this.buffers[soundName];
+
+        const gainNode = this.audioCtx.createGain();
+
+        const maxDist = 2000;
+        const dist = Math.hypot(x - listenerX, y - listenerY);
+        const volume = Math.max(0, 1 - dist / maxDist) * maxVolume;
+
+        gainNode.gain.value = volume;
+
+        let pan = (x - listenerX) / 600;
+        pan = Math.max(-1, Math.min(1, pan));
+
+        if (this.audioCtx.createStereoPanner) {
+            const panner = this.audioCtx.createStereoPanner();
+            panner.pan.value = pan;
+            source.connect(panner);
+            panner.connect(gainNode);
+        } else {
+            source.connect(gainNode);
+        }
+
+        gainNode.connect(this.audioCtx.destination);
+        source.start(0);
     }
 
     play(soundName) {
-        const soundClone = this.sounds[soundName].cloneNode();
-        soundClone.volume = this.sounds[soundName].volume;
+        if (!this.initialized || !this.buffers[soundName]) return;
+        if (this.audioCtx.state === "suspended") this.audioCtx.resume();
 
-        soundClone.play().catch((err) => {
-            console.warn("Browser blocked audio. Click the screen first!");
-        });
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = this.buffers[soundName];
+
+        const gainNode = this.audioCtx.createGain();
+        gainNode.gain.value = 0.05;
+
+        source.connect(gainNode);
+        gainNode.connect(this.audioCtx.destination);
+        source.start(0);
+    }
+
+    playLoop(soundName, volume = 0.05) {
+        if (!this.buffers[soundName]) return;
+        if (this.audioCtx.state === "suspended") this.audioCtx.resume();
+
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = this.buffers[soundName];
+        source.loop = true;
+
+        const gainNode = this.audioCtx.createGain();
+        gainNode.gain.value = volume;
+
+        source.connect(gainNode);
+        gainNode.connect(this.audioCtx.destination);
+        source.start(0);
     }
 }
 

@@ -26,7 +26,7 @@ const CONSTANTS = {
     FIRE_COOLDOWN: 1000, // ms between shots
 
     TICK_RATE: 180, // fps
-    MATCH_LENGTH: 10, // secs
+    MATCH_LENGTH: 180, // secs
 
     MAX_HP: 100,
     BULLET_DAMAGE: 34,

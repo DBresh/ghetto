@@ -183,16 +183,43 @@ class GameRenderer {
 
     renderBullets() {
         const activeBullets = STATE.serverState.bullets || [];
+        const currentBulletIds = new Set();
+
+        let myTank = null;
+        if (typeof socket !== "undefined" && STATE.serverState && STATE.serverState.players[socket.id]) {
+            myTank = STATE.serverState.players[socket.id];
+        }
+
         for (let i = 0; i < STATE.MAX_BULLETS; i++) {
             const domBullet = STATE.bulletPool[i];
             const serverBullet = activeBullets[i];
 
             if (serverBullet) {
+                currentBulletIds.add(serverBullet.id);
+
+                if (STATE.knownBullets && !STATE.knownBullets.has(serverBullet.id)) {
+                    STATE.knownBullets.add(serverBullet.id);
+
+                    if (myTank && typeof AUDIO !== "undefined" && !STATE.isMenuOpen && !STATE.serverState.isGameOver) {
+                        if (serverBullet.ownerId !== myTank.id) {
+                            AUDIO.play3D("shoot", serverBullet.x, serverBullet.y, myTank.x, myTank.y);
+                        }
+                    }
+                }
+
                 domBullet.style.display = "block";
                 domBullet.style.transform = `translate3d(${serverBullet.x}px, ${serverBullet.y}px, 0)`;
             } else {
                 if (domBullet.style.display !== "none") domBullet.style.display = "none";
             }
+        }
+
+        if (STATE.knownBullets) {
+            STATE.knownBullets.forEach((id) => {
+                if (!currentBulletIds.has(id)) {
+                    STATE.knownBullets.delete(id);
+                }
+            });
         }
     }
 

@@ -25,14 +25,20 @@ class InputController {
         });
 
         window.addEventListener("mousedown", () => {
-            const myTank = typeof socket !== "undefined" ? STATE.serverState.players[socket.id] : null;
-            if (myTank && myTank.hp <= 0) return;
+            const myTank =
+                typeof socket !== "undefined" && STATE.serverState ? STATE.serverState.players[socket.id] : null;
+            if (!myTank || myTank.hp <= 0) return;
+
+            if (STATE.isMenuOpen || (STATE.serverState && STATE.serverState.isGameOver)) return;
 
             const now = Date.now();
             if (now - STATE.lastShotTime >= CONSTANTS.FIRE_COOLDOWN) {
                 this.keys.shooting = true;
                 STATE.lastShotTime = now;
-                if (typeof AUDIO !== "undefined") AUDIO.play("shoot");
+
+                if (typeof AUDIO !== "undefined") {
+                    AUDIO.play3D("shoot", myTank.x, myTank.y, myTank.x, myTank.y);
+                }
             }
         });
 
