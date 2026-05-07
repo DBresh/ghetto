@@ -102,7 +102,6 @@ class Game {
             return this.getState();
         }
 
-        this.updateTimer(now);
         this.updatePlayers(dt, now);
         this.updateBulletsAndCollisions(dt);
 
@@ -111,7 +110,7 @@ class Game {
 
     restart() {
         this.lastUpdateTime = Date.now();
-        this.timeLeft = CONSTANTS.GAME_DURATION || 120;
+        this.timeLeft = CONSTANTS.MATCH_LENGTH || 120;
 
         this.isGameOver = false;
         this.isPaused = false;
@@ -131,12 +130,6 @@ class Game {
             const safePos = this.getSafePosition(CONSTANTS.PLAYER_WIDTH, CONSTANTS.PLAYER_HEIGHT);
             p.respawn(safePos.x, safePos.y);
         }
-    }
-
-    updateTimer(now) {
-        const elapsedSeconds = Math.floor((now - this.gameStartTime) / 1000);
-        this.timeLeft = Math.max(0, CONSTANTS.MATCH_LENGTH - elapsedSeconds);
-        if (this.timeLeft === 0) this.isGameOver = true;
     }
 
     getSafePosition(entityWidth, entityHeight) {
