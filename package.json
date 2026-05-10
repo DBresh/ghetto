@@ -1,0 +1,17 @@
+{
+    "name": "ghetto",
+    "version": "1.0.0",
+    "description": "```ehh shooter\r ehh shooter\r ├── package.json    # Node dependencies (express, socket.io)\r ├── shared/         # Code used by BOTH server and client\r │ └── constants.js  # Map dimensions, player speed, bullet speed, fire rate\r ├── server/         # The Authoritative Backend\r │ ├── server.js     # Entry point: Express app and Socket.io setup\r │ ├── game.js       # The main game loop: updates positions, checks collisions\r │ ├── player.js     # Player data structure (x, y, score, health/stun state)\r │ └── projectile.js # Bullet data structure and trajectory math\r └── public/         # The Client-side (served to the browser)\r ├── index.html      # The DOM structure (menus, scoreboards, game arena)\r ├── css/\r │ └── style.css     # UI styling and absolute positioning for game entities\r └── js/\r ├── main.js         # The requestAnimationFrame loop and Socket listeners\r ├── input.js        # Tracks KeyDown/KeyUp and Mouse clicks/position\r ├── state.js        # Stores the latest snapshot of the game sent by the server\r └── render.js       # Purely updates DOM `transform: translate()` based on state.js\r ```",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "run": "node server/server.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^5.2.1",
+        "socket.io": "^4.8.3"
+    }
+}

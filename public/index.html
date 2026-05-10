@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <div id="lobby-screen">
+        <div class="lobby-panel">
+            <h1>TANK WARFARE</h1>
+            <input type="text" id="player-name-input" placeholder="Enter your name..." maxlength="15"
+                style="padding: 12px; background: #222; color: #fff; border: 1px solid #555; border-radius: 4px; font-family: monospace; text-align: center; font-size: 16px;">
+            <button id="btn-create-lobby" class="action-btn">Create New Match</button>
+
+            <div class="lobby-divider">OR JOIN EXISTING</div>
+
+            <div id="lobby-list">
+                <div style="text-align:center; color:#777;">Searching for matches...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-over-overlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 1500; flex-direction: column; justify-content: center; align-items: center; color: white;">
+        <h1 style="color: #ff3366; font-size: 64px; margin-bottom: 10px; text-shadow: 0 0 20px #ff3366;">MATCH OVER</h1>
+        <div id="final-scoreboard"
+            style="margin-bottom: 30px; font-size: 24px; text-align: center; background: #222; padding: 20px; border-radius: 8px; border: 2px solid #555;">
+        </div>
+        <div style="display: flex; gap: 20px;">
+            <button id="btn-restart-match" class="action-btn">PLAY AGAIN</button>
+            <button id="btn-leave-match" class="action-btn" style="background: #555; color: white;">RETURN TO
+                LOBBY</button>
+        </div>
+    </div>
+
+    <div id="game-arena"></div>
+
+    <div id="ui-layer">
+        <div id="timer">3:00</div>
+        <div id="scoreboard">Waiting for players...</div>
+    </div>
+
+    <div id="player-hud">
+        <div class="hud-bar-bg" id="hp-container">
+            <div id="hp-bar"></div>
+        </div>
+        <div class="hud-bar-bg" id="reload-container">
+            <div id="reload-bar"></div>
+        </div>
+    </div>
+    <div id="kill-feed"></div>
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <input type="text" id="chat-input" placeholder="Press Enter to chat..." autocomplete="off" maxlength="100">
+    </div>
+
+    <div id="event-log"></div>
+
+    <div id="menu-overlay" style="display: none;">
+        <div class="menu-box">
+            <h2>GAME PAUSED</h2>
+            <button id="btn-resume">Resume Game</button>
+            <button id="btn-quit">Quit Game</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/shared/constants.js"></script>
+    <script src="/js/state.js"></script>
+    <script src="/js/audio.js"></script>
+    <script src="/js/input.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/render.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+
+</html>
